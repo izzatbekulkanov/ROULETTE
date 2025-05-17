@@ -1,0 +1,247 @@
+{% extends "main.html" %}
+{% block content %}
+<div class="container mt-5">
+
+    <!-- Savol haqida ma'lumot -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h4 class="mb-3">{{ question.question_text }}</h4>
+            <p><strong>Mavzu:</strong> {{ question.topic.name }}</p>
+            <p><strong>Fani:</strong> {{ question.topic.subject.name }}</p>
+            <p><strong>Yaratilgan:</strong> {{ question.created_at|date:"Y-m-d H:i" }}</p>
+            <a href="{% url 'roulette:topic_detail' slug=question.topic.slug %}" class="btn btn-secondary mt-3">
+                <i class="feather-arrow-left"></i> Ortga
+            </a>
+        </div>
+    </div>
+
+ {% if question.answers.count < 10 %}
+<!-- Javob qo‘shish formi -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="mb-3">Yangi javob qo‘shish</h5>
+        <form method="post" id="add-answer-form" action="{% url 'roulette:question_detail' question.slug %}">
+            {% csrf_token %}
+            <div class="row g-3 align-items-center">
+                <div class="col-md-9">
+                    <input type="text" name="answer_text" class="form-control"
+                           placeholder="Javob matnini kiriting..." required>
+                </div>
+                <div class="col-md-3">
+                    <select name="is_correct" class="form-select">
+                        <option value="false">❌ Noto‘g‘ri</option>
+                        <option value="true">✅ To‘g‘ri</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">Qo‘shish</button>
+        </form>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-warning" role="alert">
+    Ushbu savol uchun maksimal 10 ta javob kiritilgan.
+</div>
+{% endif %}
+
+    <!-- Javoblar ro‘yxati -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="mb-3">Javoblar ro‘yxati</h5>
+            {% if answers %}
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Javob matni</th>
+                    <th>To‘g‘ri</th>
+                    <th>Harakat</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for answer in answers %}
+                <tr data-answer-id="{{ answer.id }}">
+                    <td>{{ forloop.counter }}</td>
+                    <td>
+                        <input type="text" class="form-control answer-text" value="{{ answer.answer_text }}">
+                    </td>
+                    <td>
+                        <select class="form-select answer-correct" name="is_correct">
+                            <option value="false" {% if not answer.is_correct %}selected{% endif %}>❌ Noto‘g‘ri</option>
+                            <option value="true" {% if answer.is_correct %}selected{% endif %}>✅ To‘g‘ri</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-success update-answer-btn"
+                                data-url="{% url 'roulette:update_answer' answer.id %}">
+                            <i class="feather-save"></i> Saqlash
+                        </button>
+                        <button class="btn btn-sm btn-danger delete-answer-btn"
+                                data-url="{% url 'roulette:delete_answer' answer.id %}">
+                            <i class="feather-trash-2"></i> O‘chirish
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="text-muted">Hozircha hech qanday javob kiritilmagan.</p>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    $(document).ready(function () {
+        const csrftoken = $('input[name="csrfmiddlewaretoken"]').val();
+
+        // Yangi javob qo'shish
+        $('#add-answer-form').submit(function (e) {
+            e.preventDefault();
+            const $form = $(this);
+            const formData = $form.serialize();
+
+            $.ajax({
+                type: 'POST',
+                url: $form.attr('action'),
+                data: formData,
+                headers: {'X-CSRFToken': csrftoken, 'X-Requested-With': 'XMLHttpRequest'},
+                success: function (response) {
+                    Swal.fire({
+                        icon: response.status === 'success' ? 'success' : 'error',
+                        title: response.status === 'success' ? 'Muvaffaqiyat!' : 'Xatolik!',
+                        text: response.message,
+                        timer: 2000,
+                        timerProgressBar: true,
+                        showConfirmButton: false,
+                    }).then(() => {
+                        if (response.status === 'success') {
+                            location.reload();
+                        }
+                    });
+                },
+                error: function (xhr) {
+                    const message = xhr.responseJSON?.message || "❌ Serverda xatolik yuz berdi.";
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Xatolik',
+                        text: message,
+                    });
+                }
+            });
+        });
+
+        // Javobni yangilash (har bir qator uchun)
+        $('.update-answer-btn').click(function (e) {
+            e.preventDefault();
+
+            const $row = $(this).closest('tr');
+            const url = $(this).data('url');
+            const answer_text = $row.find('.answer-text').val().trim();
+
+            // select elementini aniq olish
+            const $select = $row.find('.answer-correct').filter('select');
+            const is_correct = $select.val();
+
+            if (typeof is_correct === 'undefined' || is_correct === null) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Xatolik',
+                    text: '❌ To‘g‘ri javob tanlanmadi!'
+                });
+                return;
+            }
+
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: {
+                    answer_text: answer_text,
+                    is_correct: is_correct,
+                    csrfmiddlewaretoken: csrftoken
+                },
+                headers: {'X-Requested-With': 'XMLHttpRequest'},
+                success: function (response) {
+                    Swal.fire({
+                        icon: response.status === 'success' ? 'success' : 'error',
+                        title: response.status === 'success' ? 'Muvaffaqiyat!' : 'Xatolik!',
+                        text: response.message,
+                        timer: 2000,
+                        timerProgressBar: true,
+                        showConfirmButton: false,
+                    });
+                },
+                error: function (xhr) {
+                    let message = "❌ Xatolik yuz berdi.";
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Xatolik',
+                        text: message
+                    });
+                }
+            });
+        });
+
+        // Javobni o‘chirish
+        $('.delete-answer-btn').click(function (e) {
+            e.preventDefault();
+
+            Swal.fire({
+                title: 'Ishonchingiz komilmi?',
+                text: "Javob o‘chirilib, qayta tiklanmaydi!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ha, o‘chirilsin!',
+                cancelButtonText: 'Bekor qilish'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const $row = $(this).closest('tr');
+                    const url = $(this).data('url');
+
+                    $.ajax({
+                        type: 'POST',
+                        url: url,
+                        data: {csrfmiddlewaretoken: csrftoken},
+                        headers: {'X-Requested-With': 'XMLHttpRequest'},
+                        success: function (response) {
+                            Swal.fire({
+                                icon: response.status === 'success' ? 'success' : 'error',
+                                title: response.status === 'success' ? 'Muvaffaqiyat!' : 'Xatolik!',
+                                text: response.message,
+                                timer: 2000,
+                                timerProgressBar: true,
+                                showConfirmButton: false,
+                            }).then(() => {
+                                if (response.status === 'success') {
+                                    location.reload();
+                                }
+                            });
+                        },
+                        error: function (xhr) {
+                            const message = xhr.responseJSON?.message || "❌ Xatolik yuz berdi.";
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Xatolik',
+                                text: message
+                            });
+                        }
+                    });
+                }
+            });
+        });
+    });
+</script>
+
+
+{% endblock extra_js %}

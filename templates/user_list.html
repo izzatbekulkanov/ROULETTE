@@ -1,0 +1,127 @@
+{% extends 'main.html' %}
+{% load static %}
+
+{% block meta %}
+    <title>Foydalanuvchilar ro'yxati</title>
+{% endblock meta %}
+
+{% block style %}
+    <style>
+        .table-hover tbody tr:hover {
+            background-color: #f8f9fa;
+            transition: background-color 0.2s ease;
+        }
+        .btn-detail {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .btn-detail:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .search-form {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+    </style>
+{% endblock style %}
+
+{% block content %}
+    <div class="container py-5 px-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h2 class="card-title text-center mb-4 fw-bold fs-3">👥 Foydalanuvchilar ro'yxati</h2>
+
+                <!-- Qidirish formasi -->
+                <form method="get" class="search-form mb-4">
+                    <div class="input-group">
+                        <input
+                            type="search"
+                            name="q"
+                            class="form-control"
+                            placeholder="Email, Ism, Familiya yoki Telefon raqam bo'yicha qidirish..."
+                            aria-label="Qidirish"
+                            value="{{ query }}"
+                            autocomplete="off"
+                        >
+                        <button class="btn btn-primary" type="submit">
+                            Qidirish
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Foydalanuvchilar jadvali -->
+                {% if users %}
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col" class="p-3">Email</th>
+                                    <th scope="col" class="p-3">Ism</th>
+                                    <th scope="col" class="p-3">Familiya</th>
+                                    <th scope="col" class="p-3">Rol</th>
+                                    <th scope="col" class="p-3">Telefon</th>
+                                    <th scope="col" class="p-3">Jins</th>
+                                    <th scope="col" class="p-3">Tug‘ilgan sana</th>
+                                    <th scope="col" class="p-3">Harakat</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                    <tr>
+                                        <td class="p-3">{{ user.email }}</td>
+                                        <td class="p-3">{{ user.first_name|default:"-" }}</td>
+                                        <td class="p-3">{{ user.last_name|default:"-" }}</td>
+                                        <td class="p-3">{{ user.get_role_display|default:"-" }}</td>
+                                        <td class="p-3">{{ user.phone_number|default:"-" }}</td>
+                                        <td class="p-3">{{ user.get_gender_display|default:"-" }}</td>
+                                        <td class="p-3">{{ user.birth_date|date:"Y-m-d"|default:"-" }}</td>
+                                        <td class="p-3">
+                                            <a href="{% url 'roulette:user_detail' user.id %}" class="btn-detail btn btn-sm btn-primary">
+                                                Batafsil
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning text-center" role="alert">
+                        Hech qanday foydalanuvchi topilmadi.
+                    </div>
+                {% endif %}
+
+                <!-- Paginatsiya -->
+                {% if users.has_other_pages %}
+                    <nav aria-label="Sahifalash" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item {% if not users.has_previous %}disabled{% endif %}">
+                                <a class="page-link" href="?q={{ query }}&page={{ users.previous_page_number }}" tabindex="-1" aria-disabled="true">« Oldingi</a>
+                            </li>
+                            {% for num in users.paginator.page_range %}
+                                {% if users.number == num %}
+                                    <li class="page-item active" aria-current="page">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > users.number|add:'-3' and num < users.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?q={{ query }}&page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            <li class="page-item {% if not users.has_next %}disabled{% endif %}">
+                                <a class="page-link" href="?q={{ query }}&page={{ users.next_page_number }}">Keyingi »</a>
+                            </li>
+                        </ul>
+                    </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock content %}
+
+{% block extra_js %}
+    <script>
+        // Agar qidirish formasiga real vaqt rejimida qidirish yoki boshqa interaktivlik qo'shmoqchi bo'lsangiz, bu yerga yozishingiz mumkin
+    </script>
+{% endblock extra_js %}

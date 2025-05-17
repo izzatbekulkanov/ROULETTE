@@ -1,0 +1,87 @@
+{% extends "main.html" %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <a href="{% url 'roulette:science_detail' topic.subject.slug %}" class="btn btn-secondary mb-3">
+                <i class="feather-arrow-left"></i> Ortga
+            </a>
+            <h3 class="mb-3">{{ topic.name }}</h3>
+            <p><strong>Fani:</strong> {{ topic.subject.name }}</p>
+            <p><strong>Yaratilgan sana:</strong> {{ topic.created_at|date:"Y-m-d H:i" }}</p>
+        </div>
+    </div>
+
+    <!-- Savol qo‘shish formi -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">Yangi savol qo‘shish</h5>
+            <form method="post" action="">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <textarea name="question_text" rows="3" class="form-control"
+                              placeholder="Yangi savol matnini kiriting..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Saqlash</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Savollar jadvali -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="mb-3">Savollar ro‘yxati</h5>
+            {% if questions %}
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Savol</th>
+                    <th>Yaratilgan</th>
+                    <th>Harakatlar</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for question in questions %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ question.question_text|truncatewords:12 }}</td>
+                    <td>{{ question.created_at|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        <a href="{% url 'roulette:question_detail' slug=question.slug %}"
+                           class="btn btn btn-outline-success">
+                            <i class="feather-plus-circle"></i> Javob qo‘shish
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="text-muted">Hozircha ushbu mavzuga hech qanday savol biriktirilmagan.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+{% if messages %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    {%
+        for message in messages %
+    }
+    Swal.fire({
+        icon: '{% if "success" in message.tags %}success{% elif "error" in message.tags %}error{% else %}info{% endif %}',
+        title: "{{ message|escapejs }}",
+        showConfirmButton: false,
+        timer: 2500
+    });
+    {%
+        endfor %
+    }
+</script>
+{% endif %}
+{% endblock extra_js %}

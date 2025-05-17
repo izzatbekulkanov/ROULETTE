@@ -1,0 +1,134 @@
+{% extends 'main.html' %}
+{% load static %}
+
+{% block meta %}
+<title>Savol qo‘shish | Ta'limiy Ruletka</title>
+<meta name="description" content="Ta'limiy Ruletka platformasida yangi savol qo‘shish.">
+{% endblock meta %}
+
+{% block style %}
+<style>
+    .rbt-form-group {
+        margin-bottom: 1.5rem; /* Inputlar orasidagi masofa */
+    }
+
+    .rbt-section-gap {
+        padding-top: 3rem; /* Yuqori margin */
+        padding-bottom: 3rem; /* Pastki margin */
+    }
+
+    .rbt-btn {
+        width: 100%; /* Tugma to‘liq kenglikda */
+    }
+
+    .back-button {
+        margin-bottom: 1rem; /* Ortga tugmasi ostidagi masofa */
+    }
+</style>
+{% endblock style %}
+
+{% block content %}
+<div class="row g-5">
+    <!-- Start Single Counter  -->
+    <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <div class="rbt-counterup style-3">
+            <div class="inner">
+                <div class="content">
+                    <h2 class="counter"><span class="odometer" data-count="{{ total_subject }}">00</span>
+                    </h2>
+                    <span class="subtitle">Fanlar</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Single Counter  -->
+        <!-- Start Single Counter  -->
+    <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <div class="rbt-counterup style-3">
+            <div class="inner">
+                <div class="content">
+                    <h2 class="counter"><span class="odometer" data-count="{{ total_topic }}">00</span>
+                    </h2>
+                    <span class="subtitle">Mavzular</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Single Counter  -->
+
+    <!-- Start Single Counter  -->
+    <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <div class="rbt-counterup style-3">
+            <div class="inner">
+                <div class="content">
+                    <h2 class="counter"><span class="odometer" data-count="{{ total_answer }}">00</span>
+                    </h2>
+                    <span class="subtitle">Savollar</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Single Counter  -->
+
+    <!-- Start Single Counter  -->
+    <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <div class="rbt-counterup style-3">
+            <div class="inner">
+                <div class="content">
+                    <h2 class="counter"><span class="odometer" data-count="{{ total_user }}">00</span>
+                    </h2>
+                    <span class="subtitle">Foydalanuvchilar</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Single Counter  -->
+</div>
+    <div class="rbt-elements-area bg-color-white rbt-section-gap">
+        <div class="container">
+            <div class="row gy-5 row--30 justify-content-center">
+                <div class="col-lg-8">
+                    <div class="rbt-contact-form contact-form-style-1 max-width-auto mx-auto">
+                        <h3 class="title text-center">Yangi fan qo‘shish</h3>
+
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                        <div class="back-button">
+                            <a href="{% url 'roulette:sciences_view' %}" class="rbt-btn btn-sm btn-secondary">
+                                <span class="icon-reverse-wrapper">
+                                    <span class="btn-text">Ortga</span>
+                                    <span class="btn-icon"><i class="feather-arrow-left"></i></span>
+                                </span>
+                            </a>
+                        </div>
+                        <form method="post" class="rbt-default-form">
+                            {% csrf_token %}
+                            <div class="rbt-form-group">
+                                <label for="name">Fan nomi *</label>
+                                <textarea id="name" name="name" rows="5" required placeholder="Fan nomini bu yerga kiriting">{{ form.name.value|default_if_none:'' }}</textarea>
+                                <span class="focus-border"></span>
+                                {% if form.name.errors %}
+                                    <div class="text-danger">{{ form.name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="form-submit-group">
+                                <button type="submit" class="rbt-btn btn-md btn-gradient hover-icon-reverse">
+                                    <span class="icon-reverse-wrapper">
+                                        <span class="btn-text">Fan qo‘shish</span>
+                                        <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                                    </span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

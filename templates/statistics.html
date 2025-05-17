@@ -1,0 +1,143 @@
+{% extends 'main.html' %}
+{% load static %}
+
+{% block meta %}
+    <title>Statistika</title>
+{% endblock meta %}
+
+{% block style %}
+    <style>
+        .stats-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .stats-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+        .section-header {
+            border-bottom: 2px solid #4F46E5;
+            padding-bottom: 0.5rem;
+        }
+    </style>
+{% endblock style %}
+
+{% block content %}
+    <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 container mt-5 mb-5">
+        <!-- Umumiy Statistikalar -->
+        <section class="mb-12">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 section-header">📊 Umumiy Statistikalar</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="stats-card bg-blue-50 p-6 rounded-xl shadow-md">
+                    <p class="text-lg font-medium text-blue-700">Jami savollar</p>
+                    <p class="text-3xl font-bold text-blue-900">{{ total_questions }}</p>
+                </div>
+                <div class="stats-card bg-green-50 p-6 rounded-xl shadow-md">
+                    <p class="text-lg font-medium text-green-700">To'g'ri javoblar</p>
+                    <p class="text-3xl font-bold text-green-900">{{ correct_answers }}</p>
+                </div>
+                <div class="stats-card bg-red-50 p-6 rounded-xl shadow-md">
+                    <p class="text-lg font-medium text-red-700">Noto'g'ri javoblar</p>
+                    <p class="text-3xl font-bold text-red-900">{{ incorrect_answers }}</p>
+                </div>
+                <div class="stats-card bg-purple-50 p-6 rounded-xl shadow-md">
+                    <p class="text-lg font-medium text-purple-700">To'g'ri foizi</p>
+                    <p class="text-3xl font-bold text-purple-900">{{ correct_percentage }}%</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Fanlar bo'yicha statistika -->
+        <section class="mb-12">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 section-header">📚 Fanlar bo'yicha</h2>
+            {% if subjects_stats %}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for subject in subjects_stats %}
+                        <div class="stats-card bg-gray-50 p-6 rounded-xl shadow-md">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-3">{{ subject.name }}</h3>
+                            <p class="text-gray-600">Jami savollar: <span class="font-medium">{{ subject.total_questions }}</span></p>
+                            <p class="text-green-600">To'g'ri: <span class="font-medium">{{ subject.correct_answers }}</span></p>
+                            <p class="text-red-600">Noto'g'ri: <span class="font-medium">{{ subject.incorrect_answers }}</span></p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500 text-center py-6">Hozircha fanlar bo'yicha statistika yo'q.</p>
+            {% endif %}
+        </section>
+
+        <!-- Mavzular bo'yicha statistika -->
+        <section class="mb-12">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 section-header">📖 Mavzular bo'yicha</h2>
+            {% if topics_stats %}
+                <div class="space-y-4">
+                    {% for topic in topics_stats %}
+                        <div class="stats-card bg-gray-50 p-6 rounded-xl shadow-md">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-3">{{ topic.topic__name }}</h3>
+                            <p class="text-gray-600">Jami savollar: <span class="font-medium">{{ topic.total_questions }}</span></p>
+                            <p class="text-green-600">To'g'ri: <span class="font-medium">{{ topic.correct_answers }}</span></p>
+                            <p class="text-red-600">Noto'g'ri: <span class="font-medium">{{ topic.incorrect_answers }}</span></p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500 text-center py-6">Hozircha mavzular bo'yicha statistika yo'q.</p>
+            {% endif %}
+        </section>
+
+        <!-- Sessiyalar statistikasi -->
+        <section class="mb-12">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 section-header">🕒 Sessiyalar</h2>
+            <div class="stats-card bg-gray-50 p-6 rounded-xl shadow-md">
+                <p class="text-gray-600">Jami sessiyalar: <span class="font-medium">{{ total_sessions }}</span></p>
+                <p class="text-gray-600">Yakunlangan sessiyalar: <span class="font-medium">{{ completed_sessions }}</span></p>
+                <p class="text-gray-600">O'rtacha to'g'ri javob foizi: <span class="font-medium">{{ avg_correct_percentage }}%</span></p>
+            </div>
+        </section>
+
+        <!-- Eng ko'p xato va to'g'ri javob berilgan savollar -->
+        <section class="mb-12">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 section-header">🔍 Savollar bo'yicha</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Xato qilingan savollar -->
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Eng ko'p xato qilingan savollar</h3>
+                    {% if incorrect_questions %}
+                        <div class="space-y-4">
+                            {% for question in incorrect_questions %}
+                                <div class="bg-red-50 p-4 rounded-lg">
+                                    <p class="text-gray-800">{{ question.question__question_text|truncatechars:50 }}</p>
+                                    <p class="text-red-600">Xato soni: <span class="font-medium">{{ question.error_count }}</span></p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-gray-500 py-4">Hozircha xato qilingan savollar yo'q.</p>
+                    {% endif %}
+                </div>
+                <!-- To'g'ri javob berilgan savollar -->
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Eng ko'p to'g'ri javob berilgan savollar</h3>
+                    {% if correct_questions %}
+                        <div class="space-y-4">
+                            {% for question in correct_questions %}
+                                <div class="bg-green-50 p-4 rounded-lg">
+                                    <p class="text-gray-800">{{ question.question__question_text|truncatechars:50 }}</p>
+                                    <p class="text-green-600">To'g'ri soni: <span class="font-medium">{{ question.correct_count }}</span></p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-gray-500 py-4">Hozircha to'g'ri javob berilgan savollar yo'q.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    </div>
+{% endblock content %}
+
+{% block extra_js %}
+    <script>
+        // Agar interaktivlik kerak bo'lsa, bu yerga qo'shishingiz mumkin
+        // Masalan, Chart.js yoki boshqa JS kutubxonalar
+    </script>
+{% endblock extra_js %}

@@ -1,0 +1,134 @@
+{% extends "main.html" %}
+{% load static %}
+
+{% block meta %}
+    <title>Mavzular ro‘yxati | Ta'limiy Ruletka</title>
+    <meta name="description" content="Ta'limiy Ruletka platformasidagi mavzular ro‘yxati va statistika.">
+{% endblock meta %}
+
+{% block style %}
+    <style>
+        .rbt-section-gap { padding: 3rem 0; }
+        .topic-card { margin-bottom: 1.5rem; transition: transform 0.2s; }
+        .topic-card:hover { transform: translateY(-5px); }
+        .search-form { margin-bottom: 2rem; }
+        .pagination { justify-content: center; margin-top: 2rem; }
+        .stats-box { background-color: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; }
+        .card-title { font-size: 1.25rem; }
+        .card-text { font-size: 0.9rem; }
+    </style>
+{% endblock style %}
+
+{% block content %}
+    <div class="rbt-elements-area bg-color-white rbt-section-gap">
+        <div class="container">
+            <h3 class="title text-center mb-4">Mavzular ro‘yxati</h3>
+
+            <!-- Umumiy statistika -->
+            <div class="stats-box text-center">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <strong>Umumiy mavzular:</strong> {{ total_topics }}
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Umumiy savollar:</strong> {{ total_questions }}
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Umumiy javoblar:</strong> {{ total_answers }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Qidiruv formasi -->
+            <form class="search-form" method="get">
+                <div class="input-group mb-3">
+                    <input type="text" name="q" class="form-control" placeholder="Mavzu yoki fan nomini kiriting" value="{{ query|default_if_none:'' }}">
+                    <button class="btn btn-gradient" type="submit">
+                        <i class="feather-search"></i> Qidirish
+                    </button>
+                </div>
+            </form>
+
+            <!-- Xabarlar -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Mavzular ro‘yxati -->
+            {% if page_obj %}
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                    {% for topic in page_obj %}
+                        <div class="col">
+                            <div class="card topic-card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ topic.name|truncatechars:30 }}</h5>
+                                    <p class="card-text">
+                                        <strong>Fan:</strong> {{ topic.subject.name|truncatechars:20 }}<br>
+                                        <strong>Savollar:</strong> {{ topic.question_count }}<br>
+                                        <strong>Javoblar:</strong> {{ topic.answer_count }}<br>
+                                        <strong>Yaratilgan:</strong> {{ topic.created_at|date:"d.m.Y" }}<br>
+                                        <strong>Muallif:</strong> {{ topic.created_by|default:"Anonim" }}
+                                    </p>
+                                    {% if topic.slug %}
+                                        <a href="{% url 'roulette:topic_detail' topic.slug %}" class="btn btn-sm btn-outline-primary">Batafsil</a>
+                                    {% else %}
+                                        <a href="#" class="btn btn-sm btn-outline-primary disabled">Batafsil</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                <nav aria-label="Sahifa navigatsiyasi">
+                    <ul class="pagination">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}" aria-label="Oldingi">
+                                    <i class="feather-chevron-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% for num in page_obj.paginator.page_range %}
+                            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                                <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a>
+                            </li>
+                        {% endfor %}
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}" aria-label="Keyingi">
+                                    <i class="feather-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% else %}
+                <div class="text-center text-muted">
+                    <p>Mavzular topilmadi. Iltimos, qidiruv so‘zini o‘zgartiring yoki yangi mavzu qo‘shing.</p>
+
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock content %}
+
+{% block extra_js %}
+    <script>
+        // Xabarlar 5 sekunddan keyin yopiladi
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(function () {
+                document.querySelectorAll('.alert').forEach(function (alert) {
+                    alert.classList.remove('show');
+                    alert.classList.add('fade');
+                });
+            }, 5000);
+        });
+    </script>
+{% endblock extra_js %}

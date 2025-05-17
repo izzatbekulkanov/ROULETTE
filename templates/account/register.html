@@ -1,0 +1,154 @@
+{% extends 'main.html' %}
+{% load static %}
+
+{% block meta %}
+    <title>Ro‘yxatdan o‘tish | Ta'limiy Ruletka</title>
+    <meta name="description" content="Ta'limiy Ruletka platformasida ro‘yxatdan o‘tish.">
+{% endblock %}
+{% block style %}
+{% endblock style %}
+
+{% block content %}
+<!-- End Breadcrumb Area -->
+<div class="rbt-elements-area bg-color-white rbt-section-gap">
+    <div class="container">
+        <div class="row gy-5 row--30 justify-content-center">
+            <div class="col-lg-6">
+                <div class="rbt-contact-form contact-form-style-1 max-width-auto mx-auto">
+                    <h3 class="title text-center">Ro‘yxatdan o‘tish</h3>
+                    <div id="message" class="alert" style="display: none;"></div>
+                    <form method="post" class="max-width-auto" id="register-form">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <input name="first_name" type="text" required/>
+                            <label>Ism *</label>
+                            <span class="focus-border"></span>
+                        </div>
+                        <div class="form-group">
+                            <input name="last_name" type="text" required/>
+                            <label>Familiya *</label>
+                            <span class="focus-border"></span>
+                        </div>
+                        <div class="form-group">
+                            <input name="third_name" type="text"/>
+                            <label>Otasining ismi</label>
+                            <span class="focus-border"></span>
+                        </div>
+                        <div class="form-group">
+                            <input name="email" type="email" required/>
+                            <label>Email *</label>
+                            <span class="focus-border"></span>
+                        </div>
+                        <div class="form-group">
+                            <input name="username" type="text" required/>
+                            <label>Foydalanuvchi nomi *</label>
+                            <span class="focus-border"></span>
+                        </div>
+                        <div class="form-group">
+                            <input name="password" type="password" required/>
+                            <label>Parol *</label>
+                            <span class="focus-border"></span>
+                        </div>
+                        <div class="form-group">
+                            <input name="password_confirm" type="password" required/>
+                            <label>Parolni tasdiqlash *</label>
+                            <span class="focus-border"></span>
+                        </div>
+                        <div class="form-submit-group">
+                            <button type="submit" class="rbt-btn btn-md btn-gradient hover-icon-reverse w-100">
+                                <span class="icon-reverse-wrapper">
+                                    <span class="btn-text">Ro‘yxatdan o‘tish</span>
+                                    <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                                    <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                                </span>
+                            </button>
+                        </div>
+                        <div class="text-center mt--20">
+                            <p>Akuntingiz bormi? <a class="rbt-btn-link" href="{% url 'account:login' %}">Kirish</a></p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block extra_js %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/imagesloaded@4/imagesloaded.pkgd.min.js"></script>
+    <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Masonry faqat kerakli elementlar uchun
+            var $masonry = $('.masonry-grid');
+            if ($masonry.length > 0) {
+                $masonry.imagesLoaded(function () {
+                    $masonry.masonry({
+                        itemSelector: '.masonry-item',
+                        columnWidth: '.masonry-item',
+                        percentPosition: true
+                    });
+                });
+            }
+
+            // CSRF tokenini olish
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            const csrftoken = getCookie('csrftoken');
+
+            $("#register-form").on("submit", function (e) {
+                e.preventDefault();
+                const formData = {
+                    first_name: $("input[name=first_name]").val(),
+                    last_name: $("input[name=last_name]").val(),
+                    third_name: $("input[name=third_name]").val(),
+                    email: $("input[name=email]").val(),
+                    username: $("input[name=username]").val(),
+                    password: $("input[name=password]").val(),
+                    password_confirm: $("input[name=password_confirm]").val(),
+                };
+                console.log("Form data:", formData);
+
+                $.ajax({
+                    url: "{% url 'account:signup' %}",
+                    type: "POST",
+                    data: JSON.stringify(formData),
+                    contentType: "application/json",
+                    headers: {
+                        'X-CSRFToken': csrftoken
+                    },
+                    success: function (response) {
+                        console.log("Success response:", response);
+                        $("#message").text(response.message).removeClass("alert-danger").addClass("alert-success").show();
+                        localStorage.setItem("access_token", response.access);
+                        localStorage.setItem("refresh_token", response.refresh);
+                        setTimeout(function () {
+                            window.location.href = "{% url 'roulette:main_admin' %}";
+                        }, 1000);
+                    },
+                    error: function (xhr) {
+                        console.log("Error response:", xhr.responseJSON);
+                        const response = xhr.responseJSON || {};
+                        let errorText = response.message || "Ro‘yxatdan o‘tishda xatolik yuz berdi";
+                        if (response.errors) {
+                            errorText += ": " + Object.entries(response.errors).map(([key, value]) => `${key}: ${value}`).join(", ");
+                        }
+                        $("#message").text(errorText).removeClass("alert-success").addClass("alert-danger").show();
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}

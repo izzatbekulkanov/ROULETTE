@@ -1,0 +1,204 @@
+{% extends 'main.html' %}
+{% load static %}
+
+{% block meta %}
+    <title>Foydalanuvchi detallari</title>
+{% endblock meta %}
+
+{% block style %}
+    <style>
+        .list-group-item {
+            border: none;
+            padding: 0.75rem 1.25rem;
+        }
+        .btn-back {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .btn-back:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .card-stats {
+            border-radius: 0.5rem;
+            transition: box-shadow 0.2s ease;
+        }
+        .card-stats:hover {
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+{% endblock style %}
+
+{% block content %}
+    <div class="container py-5 px-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <!-- Foydalanuvchi asosiy ma'lumotlari -->
+                <h2 class="card-title fw-bold fs-3 mb-4">👤 Foydalanuvchi detallari</h2>
+                <ul class="list-group list-group-flush mb-4">
+                    <li class="list-group-item"><strong>Email:</strong> {{ user.email }}</li>
+                    <li class="list-group-item"><strong>Ism:</strong> {{ user.first_name|default:"-" }}</li>
+                    <li class="list-group-item"><strong>Familiya:</strong> {{ user.last_name|default:"-" }}</li>
+                    <li class="list-group-item"><strong>Rol:</strong> {{ user.get_role_display|default:"-" }}</li>
+                    <li class="list-group-item"><strong>Telefon:</strong> {{ user.phone_number|default:"-" }}</li>
+                    <li class="list-group-item"><strong>Jins:</strong> {{ user.get_gender_display|default:"-" }}</li>
+                    <li class="list-group-item"><strong>Tug‘ilgan sana:</strong> {{ user.birth_date|date:"Y-m-d"|default:"-" }}</li>
+                </ul>
+
+                <!-- Umumiy statistika -->
+                <h3 class="fw-bold fs-4 mb-3">📊 Umumiy statistika</h3>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="card card-stats bg-light">
+                            <div class="card-body text-center">
+                                <p class="card-text fw-medium">Jami savollar</p>
+                                <h5 class="card-title fw-bold">{{ total_questions }}</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card card-stats bg-light">
+                            <div class="card-body text-center">
+                                <p class="card-text fw-medium">To'g'ri javoblar</p>
+                                <h5 class="card-title fw-bold">{{ correct_answers }}</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card card-stats bg-light">
+                            <div class="card-body text-center">
+                                <p class="card-text fw-medium">Noto'g'ri javoblar</p>
+                                <h5 class="card-title fw-bold">{{ incorrect_answers }}</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card card-stats bg-light">
+                            <div class="card-body text-center">
+                                <p class="card-text fw-medium">To'g'ri foizi</p>
+                                <h5 class="card-title fw-bold">{{ correct_percentage }}%</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fanlar bo'yicha statistika -->
+                <h3 class="fw-bold fs-4 mb-3">📚 Fanlar bo'yicha</h3>
+                {% if subjects_stats %}
+                    <div class="row g-3 mb-4">
+                        {% for subject in subjects_stats %}
+                            <div class="col-md-4">
+                                <div class="card card-stats">
+                                    <div class="card-body">
+                                        <h5 class="card-title fw-bold">{{ subject.name }}</h5>
+                                        <p class="card-text">Jami savollar: {{ subject.total_questions }}</p>
+                                        <p class="card-text text-success">To'g'ri: {{ subject.correct_answers }}</p>
+                                        <p class="card-text text-danger">Noto'g'ri: {{ subject.incorrect_answers }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info text-center" role="alert">
+                        Hozircha fanlar bo'yicha statistika yo'q.
+                    </div>
+                {% endif %}
+
+                <!-- Mavzular bo'yicha statistika -->
+                <h3 class="fw-bold fs-4 mb-3">📖 Mavzular bo'yicha</h3>
+                {% if topics_stats %}
+                    <div class="table-responsive mb-4">
+                        <table class="table table-hover table-bordered align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Mavzu</th>
+                                    <th scope="col">Jami savollar</th>
+                                    <th scope="col">To'g'ri</th>
+                                    <th scope="col">Noto'g'ri</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for topic in topics_stats %}
+                                    <tr>
+                                        <td>{{ topic.topic__name }}</td>
+                                        <td>{{ topic.total_questions }}</td>
+                                        <td class="text-success">{{ topic.correct_answers }}</td>
+                                        <td class="text-danger">{{ topic.incorrect_answers }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info text-center" role="alert">
+                        Hozircha mavzular bo'yicha statistika yo'q.
+                    </div>
+                {% endif %}
+
+                <!-- Sessiyalar statistikasi -->
+                <h3 class="fw-bold fs-4 mb-3">🕒 Sessiyalar</h3>
+                <div class="card card-stats mb-4">
+                    <div class="card-body">
+                        <p class="card-text">Jami sessiyalar: {{ total_sessions }}</p>
+                        <p class="card-text">Yakunlangan sessiyalar: {{ completed_sessions }}</p>
+                        <p class="card-text">O'rtacha to'g'ri javob foizi: {{ avg_correct_percentage }}%</p>
+                    </div>
+                </div>
+
+                <!-- Yakuniy sessiyalar -->
+                <h3 class="fw-bold fs-4 mb-3">📅 Oxirgi sessiyalar</h3>
+                {% if recent_sessions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Mavzu</th>
+                                    <th scope="col">Holati</th>
+                                    <th scope="col">To'g'ri</th>
+                                    <th scope="col">Noto'g'ri</th>
+                                    <th scope="col">Boshlangan</th>
+                                    <th scope="col">Yakunlangan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for session in recent_sessions %}
+                                    <tr>
+                                        <td>{{ session.topic__name }}</td>
+                                        <td>
+                                            {% if session.is_completed %}
+                                                Yakunlangan
+                                            {% else %}
+                                                Davom etmoqda
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-success">{{ session.correct_count }}</td>
+                                        <td class="text-danger">{{ session.incorrect_count }}</td>
+                                        <td>{{ session.started_at|date:"Y-m-d H:i" }}</td>
+                                        <td>{{ session.completed_at|date:"Y-m-d H:i"|default:"-" }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info text-center" role="alert">
+                        Hozircha sessiyalar yo'q.
+                    </div>
+                {% endif %}
+
+                <!-- Orqaga tugmasi -->
+                <div class="mt-4">
+                    <a href="{% url 'roulette:user_list' %}" class="btn-back btn btn-secondary">
+                        Orqaga
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}
+
+{% block extra_js %}
+    <script>
+        // Agar qo'shimcha interaktivlik (masalan, chartlar) kerak bo'lsa, bu yerga yoziladi
+    </script>
+{% endblock extra_js %}

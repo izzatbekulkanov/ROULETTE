@@ -1,0 +1,301 @@
+{% load static %}
+<header class="rbt-header rbt-header-10">
+    <div class="rbt-sticky-placeholder"></div>
+    <!-- Start Header Top  -->
+    <div class="rbt-header-top rbt-header-top-1 header-space-betwween bg-not-transparent bg-color-darker top-expended-activation">
+        <div class="container-fluid">
+            <div class="top-expended-wrapper">
+                <div class="top-expended-inner rbt-header-sec align-items-center">
+                    <div class="rbt-header-sec-col rbt-header-center">
+                        <div class="rbt-header-content justify-content-start justify-content-xl-center">
+                            <div class="header-info">
+                                <div class="rbt-header-top-news">
+                                    <div class="inner">
+                                        <div class="content">
+                                            <span class="rbt-badge variation-02 bg-color-primary color-white radius-round">NamSPI</span>
+                                            <span class="news-text">
+                                            <img src="{% static 'assets/images/icons/hand-emojji.svg' %}"
+                                                 alt="Hand Emojji Images">
+                                            Sayt test rejimida ishlamoqda
+                                        </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Logout Button for Non-Teachers -->
+                            {% if user.is_authenticated and not user.is_teacher %}
+                            <div class="header-info ms-3">
+                                <a href="{% url 'account:logout' %}" class="btn btn-sm btn-danger logout-link">
+                                    Chiqish
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Header Top  -->
+
+    {% if user.is_authenticated and request.user.is_teacher%}
+    <div class="rbt-header-wrapper header-space-betwween header-sticky">
+        <div class="container-fluid">
+            <div class="mainbar-row rbt-navigation-center align-items-center">
+                <div class="header-left rbt-header-content">
+                    <div class="header-info">
+                        <div class="logo logo-dark">
+                            <a href="{% url 'roulette:main_admin' %}">
+                                <img src="{% static 'assets/images/logo/logo.png' %}" alt="Education Logo Images">
+                            </a>
+                        </div>
+
+                        <div class="logo d-none logo-light">
+                            <a href="{% url 'roulette:main_admin' %}">
+                                <img src="{% static 'assets/images/dark/logo/logo-light.png' %}"
+                                     alt="Education Logo Images">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rbt-main-navigation d-none d-xl-block">
+                    <nav class="mainmenu-nav">
+                        <ul class="mainmenu">
+                            <li class="has-dropdown has-menu-child-item">
+                                <a href="#">Savollar
+                                    <i class="feather-chevron-down"></i>
+                                </a>
+                                <ul class="submenu">
+                                    <li class="has-dropdown"><a href="{% url 'roulette:sciences_view' %}">Fanlar</a>
+                                    </li>
+                                    <li class="has-dropdown"><a href="{% url 'roulette:topic_list' %}">Mavzular</a></li>
+                                    <li class="has-dropdown"><a href="{% url 'roulette:question_list' %}">Savollar</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="has-dropdown has-menu-child-item">
+                                <a href="{% url 'roulette:user_list' %}">Foydalanuvchilar
+                                </a>
+
+                            </li>
+                            <li class="has-dropdown has-menu-child-item">
+                                <a href="{% url 'roulette:statistics_view' %}">Ma'lumotlar
+
+                                </a>
+
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+
+                <div class="header-right">
+
+                    <!-- Navbar Icons -->
+                    <ul class="quick-access">
+                        <li class="access-icon">
+                            <a class="search-trigger-active rbt-round-btn" href="#">
+                                <i class="feather-search"></i>
+                            </a>
+                        </li>
+
+                        <li class="account-access rbt-user-wrapper d-none d-xl-block">
+                            <a href="#"><i class="feather-user"></i>{{ request.user.username }}</a>
+                            <div class="rbt-user-menu-list-wrapper">
+                                <div class="inner">
+                                    <!--                                    <ul class="user-list-wrapper">-->
+                                    <!--                                        <li>-->
+                                    <!--                                            <a href="instructor-dashboard.html">-->
+                                    <!--                                                <i class="feather-home"></i>-->
+                                    <!--                                                <span>My Dashboard</span>-->
+                                    <!--                                            </a>-->
+                                    <!--                                        </li>-->
+                                    <!--                                    </ul>-->
+                                    <!--                                    <hr class="mt&#45;&#45;10 mb&#45;&#45;10">-->
+                                    <!--                                    <ul class="user-list-wrapper">-->
+                                    <!--                                        <li>-->
+                                    <!--                                            <a href="#">-->
+                                    <!--                                                <i class="feather-book-open"></i>-->
+                                    <!--                                                <span>Getting Started</span>-->
+                                    <!--                                            </a>-->
+                                    <!--                                        </li>-->
+                                    <!--                                    </ul>-->
+                                    <!--                                    <hr class="mt&#45;&#45;10 mb&#45;&#45;10">-->
+                                    <ul class="user-list-wrapper">
+                                        <li>
+                                            <a href="#" class="logout-link">
+                                                <i class="feather-log-out"></i>
+                                                <span>Chiqish</span>
+                                            </a>
+                                        </li>
+
+                                    </ul>
+                                </div>
+                            </div>
+                        </li>
+
+                        <li class="access-icon rbt-user-wrapper d-block d-xl-none">
+                            <a class="rbt-round-btn" href="#"><i class="feather-user"></i></a>
+                            <div class="rbt-user-menu-list-wrapper">
+                                <div class="inner">
+                                    <ul class="user-list-wrapper">
+                                        <li>
+                                            <a href="instructor-reviews.html">
+                                                <i class="feather-star"></i>
+                                                <span>Reviews</span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="instructor-order-history.html">
+                                                <i class="feather-clock"></i>
+                                                <span>Order History</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                    <hr class="mt--10 mb--10">
+                                    <ul class="user-list-wrapper">
+                                        <li>
+                                            <a href="#">
+                                                <i class="feather-book-open"></i>
+                                                <span>Getting Started</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                    <hr class="mt--10 mb--10">
+                                    <ul class="user-list-wrapper">
+                                        <li>
+                                            <a href="instructor-settings.html">
+                                                <i class="feather-settings"></i>
+                                                <span>Settings</span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="#" class="logout-link">
+
+
+                                                <i class="feather-log-out"></i>
+                                                <span>Chiqish</span>
+                                            </a>
+                                        </li>
+
+                                    </ul>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <!-- Start Mobile-Menu-Bar -->
+                    <div class="mobile-menu-bar d-block d-xl-none">
+                        <div class="hamberger">
+                            <button class="hamberger-button rbt-round-btn">
+                                <i class="feather-menu"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Start Mobile-Menu-Bar -->
+                </div>
+            </div>
+        </div>
+        <!-- Start Search Dropdown  -->
+        <div class="rbt-search-dropdown">
+            <div class="wrapper">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <form action="#">
+                            <input type="text" placeholder="What are you looking for?">
+                            <div class="submit-btn">
+                                <a class="rbt-btn btn-gradient btn-md" href="#">Search</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="rbt-separator-mid">
+                    <hr class="rbt-separator m-0">
+                </div>
+
+            </div>
+        </div>
+        <!-- End Search Dropdown  -->
+    </div>
+    <a class="rbt-close_side_menu" href="javascript:void(0);"></a>
+    {% endif %}
+
+
+</header>
+
+<!-- Xabar uchun konteyner -->
+<div id="notification" class="position-fixed top-0 end-0 p-3" style="z-index: 1050; display: none;">
+    <div class="alert alert-dismissible fade show" role="alert">
+        <span id="notification-message"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $(".logout-link").on("click", function (e) {
+            e.preventDefault();
+            console.log("Logout link clicked");
+
+            // CSRF tokenini olish
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            const csrftoken = getCookie('csrftoken');
+
+            $.ajax({
+                url: "{% url 'account:logout' %}",
+                type: "POST",
+                headers: {
+                    'X-CSRFToken': csrftoken
+                },
+                success: function (response) {
+                    console.log("Logout successful");
+                    // JWT tokenlarini o‘chirish
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
+                    console.log("JWT tokens cleared from localStorage");
+                    // Chiroyli muvaffaqiyat xabari
+                    $("#notification-message").text("Chiqish muvaffaqiyatli");
+                    $("#notification .alert")
+                        .removeClass("alert-danger")
+                        .addClass("alert-success")
+                        .parent().show();
+                    // 2 soniyadan keyin xabar yo‘qoladi va yo‘naltiriladi
+                    setTimeout(function () {
+                        $("#notification").fadeOut();
+                        window.location.href = "{% url 'account:login' %}";
+                    }, 2000);
+                },
+                error: function (xhr) {
+                    console.log("Logout error:", xhr.responseJSON);
+                    // Chiroyli xato xabari
+                    $("#notification-message").text("Chiqishda xatolik yuz berdi");
+                    $("#notification .alert")
+                        .removeClass("alert-success")
+                        .addClass("alert-danger")
+                        .parent().show();
+                    // 2 soniyadan keyin xabar yo‘qoladi
+                    setTimeout(function () {
+                        $("#notification").fadeOut();
+                    }, 2000);
+                }
+            });
+        });
+    });
+</script>

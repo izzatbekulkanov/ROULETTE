@@ -1,0 +1,132 @@
+{% extends 'main.html' %}
+{% load static %}
+
+{% block meta %}
+    <title>Kirish | Ta'limiy Ruletka</title>
+    <meta name="description" content="Ta'limiy Ruletka platformasiga kirish.">
+{% endblock %}
+
+{% block content %}
+<!-- End Breadcrumb Area -->
+<div class="rbt-elements-area bg-color-white rbt-section-gap">
+    <div class="container">
+        <div class="row gy-5 row--30 justify-content-center">
+            <div class="col-lg-6">
+                <div class="rbt-contact-form contact-form-style-1 max-width-auto mx-auto">
+                    <h3 class="title text-center">Kirish</h3>
+                    <div id="message" class="alert" style="display: none;"></div>
+                    <form method="post" class="max-width-auto" id="login-form" autocomplete="off">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <input name="email_or_username" type="text" required autocomplete="off"/>
+                            <label>Email yoki foydalanuvchi nomi *</label>
+                            <span class="focus-border"></span>
+                        </div>
+                        <div class="form-group">
+                            <input name="password" type="password" required autocomplete="off"/>
+                            <label>Parol *</label>
+                            <span class="focus-border"></span>
+                        </div>
+                        <div class="row mb--30">
+                            <div class="col-lg-6">
+                                <div class="rbt-checkbox">
+                                    <input type="checkbox" id="rememberme" name="rememberme">
+                                    <label for="rememberme">Eslab qol</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-submit-group">
+                            <button type="submit" class="rbt-btn btn-md btn-gradient hover-icon-reverse w-100">
+                                <span class="icon-reverse-wrapper">
+                                    <span class="btn-text">Kirish</span>
+                                    <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                                    <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+                                </span>
+                            </button>
+                        </div>
+                        <div class="text-center mt--20">
+                            <p>Akuntingiz yo‘qmi? <a class="rbt-btn-link" href="{% url 'account:signup' %}">Ro‘yxatdan o‘ting</a></p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block extra_js %}
+
+    <script>
+        $(document).ready(function () {
+            // Masonry faqat kerakli elementlar uchun
+            var $masonry = $('.masonry-grid');
+            if ($masonry.length > 0) {
+                $masonry.imagesLoaded(function () {
+                    $masonry.masonry({
+                        itemSelector: '.masonry-item',
+                        columnWidth: '.masonry-item',
+                        percentPosition: true
+                    });
+                });
+            }
+
+            // CSRF tokenini olish
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            const csrftoken = getCookie('csrftoken');
+
+            // Input maydonlarini tozalash
+            $("input[name=email_or_username]").val('');
+            $("input[name=password]").val('');
+
+            $("#login-form").on("submit", function (e) {
+                e.preventDefault();
+                const formData = {
+                    email_or_username: $("input[name=email_or_username]").val(),
+                    password: $("input[name=password]").val(),
+                };
+                console.log("Form data:", formData);
+
+                $.ajax({
+                    url: "{% url 'account:login' %}",
+                    type: "POST",
+                    data: JSON.stringify(formData),
+                    contentType: "application/json",
+                    headers: {
+                        'X-CSRFToken': csrftoken
+                    },
+                    success: function (response) {
+                        console.log("Success response:", response);
+                        $("#message").text(response.message).removeClass("alert-danger").addClass("alert-success").show();
+                        localStorage.setItem("access_token", response.access);
+                        localStorage.setItem("refresh_token", response.refresh);
+                        setTimeout(function () {
+                            window.location.href = "{% url 'roulette:main_admin' %}";
+                        }, 1000);
+                    },
+                    error: function (xhr) {
+                        console.log("Error response:", xhr.responseJSON);
+                        const response = xhr.responseJSON || {};
+                        let errorText = response.message || "Kirishda xatolik yuz berdi";
+                        if (response.errors) {
+                            errorText += ": " + Object.entries(response.errors).map(([key, value]) => `${key}: ${value}`).join(", ");
+                        }
+                        $("#message").text(errorText).removeClass("alert-success").addClass("alert-danger").show();
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,380 @@
+{% extends "main.html" %}
+{% load static %}
+
+
+{% block meta %}
+<title>{{ topic.name }} - Savollar | Ta'limiy Ruletka</title>
+<meta name="description" content="{{ topic.name }} mavzusiga oid savollar va statistika.">
+{% endblock meta %}
+
+{% block style %}
+<style>
+    .rbt-section-gap {
+        padding: 3rem 0;
+    }
+
+    .stats-box {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+
+    .start-button {
+        margin-top: 1.5rem;
+    }
+
+    .no-questions {
+        font-size: 1.1rem;
+        color: #6c757d;
+    }
+
+    .rbt-section-gap {
+        padding: 3rem 0;
+    }
+
+    .stats-box {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+
+    .no-questions {
+        font-size: 1.1rem;
+        color: #6c757d;
+    }
+
+    .start-button {
+        font-size: 1.5rem;
+        padding: 1rem 3rem;
+        border-radius: 50px;
+        background: linear-gradient(45deg, #28a745, #34c759);
+        border: none;
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin-top: 1.5rem;
+        display: inline-block;
+    }
+
+    .start-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 15px rgba(0, 128, 0, 0.3);
+    }
+</style>
+{% endblock style %}
+
+{% block content %}
+<div class="rbt-elements-area bg-color-white rbt-section-gap">
+    <div class="container">
+        <!-- Sarlavha qismi -->
+        <div class="text-center mb-5 relative">
+            <!-- Ortga qaytish tugmasi -->
+
+
+            <h2 class="title mb-3">{{ topic.name }}</h2>
+            <p class="text-muted mb-0">{{ subject.name }} fani</p>
+            <button onclick="window.history.back()"
+                    class="btn btn-outline-primary  ">
+                <i class="feather-arrow-left"></i> Ortga qaytish
+            </button>
+        </div>
+
+        <!-- Asosiy statistikalar paneli -->
+        <div class="row mb-4">
+            <!-- Jami savollar -->
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 border-primary">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-primary">
+                            <i class="fas fa-question-circle me-2"></i> Jami savollar
+                        </h5>
+                        <p class="display-5">{{ total_questions }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- To'g'ri javoblar -->
+            {% if user_progress %}
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 border-success">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-success">
+                            <i class="fas fa-check-circle me-2"></i> To'g'ri javoblar
+                        </h5>
+                        <p class="display-5">{{ user_progress.correct_answers }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Noto'g'ri javoblar -->
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 border-danger">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-danger">
+                            <i class="fas fa-times-circle me-2"></i> Noto'g'ri javoblar
+                        </h5>
+                        <p class="display-5">{{ user_progress.incorrect_answers }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Progress bari -->
+        {% if user_progress %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">
+                    <i class="fas fa-chart-line me-2"></i> Progress
+                </h5>
+                {% widthratio user_progress.correct_answers user_progress.total_questions 100 as progress %}
+                <div class="progress" style="height: 25px;">
+                    <div class="progress-bar bg-success progress-bar-striped progress-bar-animated"
+                         role="progressbar"
+                         style="width: {{ progress }}%"
+                         aria-valuenow="{{ progress }}"
+                         aria-valuemin="0"
+                         aria-valuemax="100">
+                        {{ progress }}% bajarildi
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between mt-2">
+                    <small>Boshlang'ich</small>
+                    <small>Yakuniy</small>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Oxirgi test sessiyasi -->
+        {% if question_session %}
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i> Oxirgi test natijalari
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Holati
+                                <span class="badge {% if question_session.is_completed %}bg-success{% else %}bg-warning{% endif %}">
+                                    {% if question_session.is_completed %}Yakunlangan{% else %}Davam etmoqda{% endif %}
+                                </span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Boshlangan sana
+                                <span>{{ question_session.started_at|date:"d.m.Y H:i" }}</span>
+                            </li>
+                            {% if question_session.completed_at %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Tugatilgan sana
+                                <span>{{ question_session.completed_at|date:"d.m.Y H:i" }}</span>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                To'g'ri javoblar
+                                <span class="badge bg-success rounded-pill">{{ question_session.correct_count }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Noto'g'ri javoblar
+                                <span class="badge bg-danger rounded-pill">{{ question_session.incorrect_count }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Umumiy savollar
+                                <span class="badge bg-primary rounded-pill">{{ question_session.total_questions }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                {% if not question_session.is_completed %}
+                <div class="text-center mt-4">
+                    <a href="{% url 'roulette:question_session' topic.slug %}"
+                       class="btn btn-primary btn-lg">
+                        <i class="fas fa-play-circle me-2"></i> Testni davom ettirish
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Savollar jadvali -->
+        <div class="card mb-4">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-list-ol me-2"></i> Savollar ro'yxati
+                </h5>
+                <span class="badge bg-primary">
+                    {{ page_obj.start_index }}-{{ page_obj.end_index }} / {{ total_questions }}
+                </span>
+            </div>
+            <div class="card-body">
+                {% if page_obj.object_list %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                        <tr>
+                            <th width="5%">#</th>
+                            <th width="65%">Savol matni</th>
+                            <th width="15%">Holati</th>
+                            <th width="15%">Javob</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for question in page_obj.object_list %}
+                        <tr>
+                            <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                            <td>
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#questionModal{{ question.id }}">
+                                    {{ question.question_text|truncatechars:60 }}
+                                </a>
+                            </td>
+                            <td>
+                                {% if question.current_user_answers %}
+                                {% with answer=question.current_user_answers.0 %}
+                                {% if answer.is_correct %}
+                                <span class="badge bg-success">
+                                                <i class="fas fa-check me-1"></i> To'g'ri
+                                            </span>
+                                {% else %}
+                                <span class="badge bg-danger">
+                                                <i class="fas fa-times me-1"></i> Noto'g'ri
+                                            </span>
+                                {% endif %}
+                                {% endwith %}
+                                {% else %}
+                                <span class="badge bg-secondary">
+                                        <i class="fas fa-question me-1"></i> Javob berilmagan
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if question.current_user_answers %}
+                                {% with answer=question.current_user_answers.0 %}
+                                {{ answer.answer.answer_text|truncatechars:20 }}
+                                {% endwith %}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Sahifalash -->
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% else %}
+                <div class="alert alert-info text-center py-4">
+                    <i class="fas fa-info-circle fa-2x mb-3"></i>
+                    <h5>Bu mavzuda savollar mavjud emas</h5>
+                    <p class="mb-0">Administratorga murojaat qiling</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Testni boshlash tugmasi -->
+        {% if total_questions > 0 %}
+        <div class="text-center mt-4">
+            <a href="{% url 'roulette:question_session' topic.slug %}"
+               class="btn btn-success btn-lg px-5 py-3">
+                <i class="fas fa-play me-2"></i> Testni boshlash
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Savol modal oynalari -->
+{% for question in page_obj.object_list %}
+<div class="modal fade" id="questionModal{{ question.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title">Savol #{{ forloop.counter0|add:page_obj.start_index }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="lead">{{ question.question_text }}</p>
+                <hr>
+                <h6>Javob variantlari:</h6>
+                <ol>
+                    {% for answer in question.answers.all %}
+                    <li class="mb-2 {% if answer.is_correct %}text-success fw-bold{% endif %}">
+                        {{ answer.answer_text }}
+                        {% if answer.is_correct %}
+                        <span class="badge bg-success ms-2">To'g'ri javob</span>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ol>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Yopish</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Xabarlar 5 sekunddan keyin yopiladi
+    document.addEventListener('DOMContentLoaded', function () {
+        setTimeout(function () {
+            document.querySelectorAll('.alert').forEach(function (alert) {
+                alert.classList.remove('show');
+                alert.classList.add('fade');
+            });
+        }, 5000);
+    });
+</script>
+{% endblock extra_js %}

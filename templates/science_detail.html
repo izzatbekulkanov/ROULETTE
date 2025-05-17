@@ -1,0 +1,160 @@
+{% extends 'main.html' %}
+{% load static %}
+
+{% block meta %}
+<title>Fanlar</title>
+{% endblock meta%}
+{% block style %}
+{% endblock style %}
+
+{% block content %}
+<!-- 🔙 Ortga tugmasi -->
+<div class="container mt--20">
+    <a href="{% url 'roulette:sciences_view' %}" class="btn btn-secondary">
+        <i class="feather-arrow-left"></i> Ortga qaytish
+    </a>
+</div>
+<div class="rbt-page-banner-wrapper">
+    <!-- Start Banner BG Image  -->
+    <div class="rbt-banner-image"></div>
+    <!-- End Banner BG Image  -->
+</div>
+
+
+<!-- Start Card Style -->
+<div class="rbt-dashboard-area rbt-section-overlayping-top rbt-section-gapBottom">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <!-- Start Dashboard Top  -->
+                <div class="rbt-dashboard-content-wrapper">
+                    <div class="tutor-bg-photo bg_image  height-350">
+                        <img src="{% static 'assets/images/bgg.jpg' %}" style="width: 100%" alt="">
+                    </div>
+                    <!-- Start Tutor Information  -->
+                    <div class="rbt-tutor-information">
+                        <div class="rbt-tutor-information-left">
+                            <div class="thumbnail rbt-avatars size-lg">
+                                <img src="{% static 'assets/images/science.webp' %}" alt="Instructor">
+                            </div>
+                            <div class="tutor-content">
+                                <h5 class="title">{{ subject.name }}</h5>
+                                <div class="rbt-review">
+                                    <span class="rating-count"> (15 Reviews)</span>
+                                </div>
+                                <ul class="rbt-meta rbt-meta-white mt--5">
+                                    <li><i class="feather-book-open"></i> {{ topics_count }} mavzular</li>
+                                    <!-- Kitob ochilgan -->
+                                    <li><i class="feather-help-circle"></i> {{ questions_count }} savollar</li>
+                                    <!-- Savollar uchun -->
+                                </ul>
+
+                            </div>
+                        </div>
+                    </div>
+                    <!-- End Tutor Information  -->
+                </div>
+                <!-- End Dashboard Top  -->
+            </div>
+
+            <!-- ➕ Mavzu qo‘shish tugmasi -->
+            <div class="col-lg-12 mt--30 d-flex justify-content-end">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTopicModal">
+                    <i class="feather-plus"></i> Mavzu qo‘shish
+                </button>
+            </div>
+
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+            <div class="col-lg-12 mt--30">
+                <h4 class="rbt-title-style-3 mb--20">Mavzular</h4>
+                <div class="row g-4">
+                    {% for topic in topics %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border shadow-sm h-100">
+                            <div class="card-body d-flex flex-column justify-content-between">
+                                <h5 class="card-title mb-1">{{ topic.name }}</h5>
+                                <small class="text-muted mb-3">Yaratilgan: {{ topic.created_at|date:"d M Y" }}</small>
+
+                                <ul class="list-unstyled mb-3">
+                                    <li><i class="feather-help-circle me-2"></i> {{ topic.questions_count }} savol</li>
+                                </ul>
+
+                                <div class="d-flex btn-group" role="group" aria-label="Action buttons">
+                                    <!-- ✏️ Tahrirlash -->
+                                    <a href="{% url 'roulette:topic_detail' topic.slug %}"
+                                       class="btn btn-sm btn-warning">
+                                        <i class="feather-edit"></i> Tahrirlash
+                                    </a>
+
+                                    <!-- 🗑️ O‘chirish -->
+
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-danger"
+                                            onclick="return confirm('Haqiqatan ham o‘chirmoqchimisiz?')">
+                                        <i class="feather-trash-2"></i> O‘chirish
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12">
+                        <p class="text-muted">Hozircha ushbu fanga mavzular mavjud emas.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- 🧾 Modal oynasi -->
+<div class="modal fade" id="addTopicModal" tabindex="-1" aria-labelledby="addTopicModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="post" action="{{ request.path }}">
+            {% csrf_token %}
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addTopicModalLabel">Yangi Mavzu Qo‘shish</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Yopish"></button>
+                </div>
+                <div class="modal-body">
+                    {{ form.name.label_tag }}
+                    {{ form.name }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
+                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+{% endblock content %}
+
+{% block extra_js %}
+{% if messages %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    {% for message in messages %}
+    Swal.fire({
+        icon: '{% if message.tags == "success" %}success{% elif message.tags == "error" %}error{% else %}info{% endif %}',
+        title: "{{ message|escapejs }}",
+        showConfirmButton: false,
+        timer: 2500
+    });
+    {% endfor %}
+</script>
+{% endif %}
+{% endblock extra_js %}
