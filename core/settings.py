@@ -35,6 +35,7 @@ INSTALLED_APPS = [
 # Middleware sozlamalari
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # bu qatorda bo‘lishi kerak
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -43,6 +44,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_ratelimit.middleware.RatelimitMiddleware',  # Rate limiting
 ]
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 ROOT_URLCONF = 'core.urls'
 # Template sozlamalari
 TEMPLATES = [
@@ -133,7 +135,6 @@ CSRF_TRUSTED_ORIGINS = [
     "https://webtest.namspi.uz",
     "https://ruletka.namspi.uz",
 ]
-
 
 # Login va Logout yo‘nalishlari
 LOGIN_URL = '/account/login/'  # Login sahifasi URLi
