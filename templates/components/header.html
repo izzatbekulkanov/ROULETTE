@@ -114,39 +114,11 @@
                             <a class="rbt-round-btn" href="#"><i class="feather-user"></i></a>
                             <div class="rbt-user-menu-list-wrapper">
                                 <div class="inner">
+
                                     <ul class="user-list-wrapper">
+
                                         <li>
-                                            <a href="instructor-reviews.html">
-                                                <i class="feather-star"></i>
-                                                <span>Reviews</span>
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="instructor-order-history.html">
-                                                <i class="feather-clock"></i>
-                                                <span>Order History</span>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                    <hr class="mt--10 mb--10">
-                                    <ul class="user-list-wrapper">
-                                        <li>
-                                            <a href="#">
-                                                <i class="feather-book-open"></i>
-                                                <span>Getting Started</span>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                    <hr class="mt--10 mb--10">
-                                    <ul class="user-list-wrapper">
-                                        <li>
-                                            <a href="instructor-settings.html">
-                                                <i class="feather-settings"></i>
-                                                <span>Settings</span>
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="#" class="logout-link">
+                                            <a href="{% url 'account:logout' %}" class="logout-link">
 
 
                                                 <i class="feather-log-out"></i>
@@ -160,15 +132,6 @@
                         </li>
                     </ul>
 
-                    <!-- Start Mobile-Menu-Bar -->
-                    <div class="mobile-menu-bar d-block d-xl-none">
-                        <div class="hamberger">
-                            <button class="hamberger-button rbt-round-btn">
-                                <i class="feather-menu"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <!-- Start Mobile-Menu-Bar -->
                 </div>
             </div>
         </div>
