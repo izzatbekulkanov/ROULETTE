@@ -92,11 +92,6 @@
 
                     <!-- Navbar Icons -->
                     <ul class="quick-access">
-                        <li class="access-icon">
-                            <a class="search-trigger-active rbt-round-btn" href="#">
-                                <i class="feather-search"></i>
-                            </a>
-                        </li>
 
                         <li class="account-access rbt-user-wrapper d-none d-xl-block">
                             <a href="#"><i class="feather-user"></i>{{ request.user.username }}</a>
@@ -177,27 +172,7 @@
                 </div>
             </div>
         </div>
-        <!-- Start Search Dropdown  -->
-        <div class="rbt-search-dropdown">
-            <div class="wrapper">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <form action="#">
-                            <input type="text" placeholder="What are you looking for?">
-                            <div class="submit-btn">
-                                <a class="rbt-btn btn-gradient btn-md" href="#">Search</a>
-                            </div>
-                        </form>
-                    </div>
-                </div>
 
-                <div class="rbt-separator-mid">
-                    <hr class="rbt-separator m-0">
-                </div>
-
-            </div>
-        </div>
-        <!-- End Search Dropdown  -->
     </div>
     <a class="rbt-close_side_menu" href="javascript:void(0);"></a>
     {% endif %}
