@@ -15,6 +15,12 @@
         <div class="row gy-5 row--30 justify-content-center">
             <div class="col-lg-6">
                 <div class="rbt-contact-form contact-form-style-1 max-width-auto mx-auto">
+
+                    <!-- Logo -->
+                    <div class="text-center mb--20">
+                        <img src="{% static 'assets/images/logo_login.png' %}" alt="Logo" width="150" />
+                    </div>
+
                     <h3 class="title text-center">Ro‘yxatdan o‘tish</h3>
                     <div id="message" class="alert" style="display: none;"></div>
                     <form method="post" class="max-width-auto" id="register-form">
@@ -55,10 +61,9 @@
                             <span class="focus-border"></span>
                         </div>
                         <div class="form-submit-group">
-                            <button type="submit" class="rbt-btn btn-md btn-gradient hover-icon-reverse w-100">
+                            <button type="submit" class="rbt-btn btn-md btn-danger w-100">
                                 <span class="icon-reverse-wrapper">
                                     <span class="btn-text">Ro‘yxatdan o‘tish</span>
-                                    <span class="btn-icon"><i class="feather-arrow-right"></i></span>
                                     <span class="btn-icon"><i class="feather-arrow-right"></i></span>
                                 </span>
                             </button>
@@ -73,6 +78,7 @@
     </div>
 </div>
 {% endblock content %}
+
 {% block extra_js %}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://unpkg.com/imagesloaded@4/imagesloaded.pkgd.min.js"></script>

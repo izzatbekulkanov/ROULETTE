@@ -13,6 +13,12 @@
         <div class="row gy-5 row--30 justify-content-center">
             <div class="col-lg-6">
                 <div class="rbt-contact-form contact-form-style-1 max-width-auto mx-auto">
+
+                    <!-- Logo -->
+                    <div class="text-center mb--20">
+                        <img src="{% static 'assets/images/logo_login.png' %}" alt="Login Logo" width="150" />
+                    </div>
+
                     <h3 class="title text-center">Kirish</h3>
                     <div id="message" class="alert" style="display: none;"></div>
                     <form method="post" class="max-width-auto" id="login-form" autocomplete="off">
@@ -36,11 +42,11 @@
                             </div>
                         </div>
                         <div class="form-submit-group">
-                            <button type="submit" class="rbt-btn btn-md btn-gradient hover-icon-reverse w-100">
+                            <button type="submit" class="rbt-btn btn-md btn-danger w-100">
                                 <span class="icon-reverse-wrapper">
                                     <span class="btn-text">Kirish</span>
                                     <span class="btn-icon"><i class="feather-arrow-right"></i></span>
-                                    <span class="btn-icon"><i class="feather-arrow-right"></i></span>
+
                                 </span>
                             </button>
                         </div>
@@ -54,6 +60,7 @@
     </div>
 </div>
 {% endblock content %}
+
 {% block extra_js %}
 
     <script>
