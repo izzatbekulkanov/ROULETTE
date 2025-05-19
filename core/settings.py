@@ -4,8 +4,15 @@ from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
-DEBUG = True
-ALLOWED_HOSTS = ["*"]
+DEBUG = False
+# Ruxsat etilgan domenlar
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "webtest.namspi.uz",
+    "ruletka.namspi.uz",
+]
+
 # Ruxsat berilgan hostlar
 # Ilovalar ro'yxati
 INSTALLED_APPS = [
@@ -118,6 +125,15 @@ RATELIMIT_BLOCK = True
 CSRF_COOKIE_SECURE = False  # Productionda True qiling
 SESSION_COOKIE_SECURE = False  # Productionda True qiling
 SECURE_SSL_REDIRECT = False  # Productionda True qiling
+
+# CSRF uchun ishonchli manbalar (HTTPS bilan yozilishi shart)
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost",
+    "http://127.0.0.1",
+    "https://webtest.namspi.uz",
+    "https://ruletka.namspi.uz",
+]
+
 
 # Login va Logout yo‘nalishlari
 LOGIN_URL = '/account/login/'  # Login sahifasi URLi
