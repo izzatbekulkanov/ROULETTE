@@ -5,4 +5,4 @@ from whitenoise import WhiteNoise
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 
 application = get_wsgi_application()
-application = WhiteNoise(application, root='/home/superadmin/ROULETTE/staticfiles')
+application = WhiteNoise(application)
