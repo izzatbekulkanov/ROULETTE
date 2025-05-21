@@ -4,7 +4,7 @@ from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
-DEBUG = True
+DEBUG = False
 # Ruxsat etilgan domenlar
 ALLOWED_HOSTS = [
     "localhost",
