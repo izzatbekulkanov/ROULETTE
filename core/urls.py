@@ -3,16 +3,13 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
-
 urlpatterns = [
-    path('admin/', admin.site.urls),  # Admin panel
-    path('account/', include('account.urls')),  # Autentifikatsiya va profil
-    path('', include('roulette.urls')),  # O‘yin funksiyalari
+    path('admin/', admin.site.urls),
+    path('account/', include('account.urls')),
+    path('', include('roulette.urls')),
 ]
 
-
-# Faqat DEBUG True holatda static va media fayllarni server qilish uchun
+# Serve static and media files in development
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
