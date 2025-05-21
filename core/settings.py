@@ -40,6 +40,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # WhiteNoise qo‘shildi
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -103,7 +104,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'  # WhiteNoise storage
 
 # Media files (User-uploaded content)
 MEDIA_URL = '/media/'
@@ -142,15 +143,19 @@ RATELIMIT_ENABLE = True
 RATELIMIT_RATE = '100/h'
 RATELIMIT_BLOCK = True
 
-# Security settings for production
-CSRF_COOKIE_SECURE = not DEBUG  # True in production
-SESSION_COOKIE_SECURE = not DEBUG  # True in production
-SECURE_SSL_REDIRECT = not DEBUG  # True in production
+# Security settings
+CSRF_COOKIE_SECURE = False  # HTTPS ishlatilmaydi
+SESSION_COOKIE_SECURE = False  # HTTPS ishlatilmaydi
+SECURE_SSL_REDIRECT = False  # HTTPS ishlatilmaydi
 
 # CSRF trusted origins
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost',
     'http://127.0.0.1',
+    'http://webtest.namspi.uz',
+    'http://ruletka.namspi.uz',
+    'https://localhost',
+    'https://127.0.0.1',
     'https://webtest.namspi.uz',
     'https://ruletka.namspi.uz',
 ]
