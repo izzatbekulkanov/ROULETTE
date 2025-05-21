@@ -14,7 +14,7 @@
                                         <div class="content">
                                             <span class="news-text">
 <!--                                            <img src="{% static 'assets/images/icons/hand-emojji.svg' %}"-->
-<!--                                                 alt="Hand Emojji Images">-->
+                                                <!--                                                 alt="Hand Emojji Images">-->
                                             Tarixiy savollar barabari
                                         </span>
                                         </div>
@@ -89,12 +89,15 @@
                 </div>
 
                 <div class="header-right">
-
+<span>{{ request.user.score }} ball</span>
                     <!-- Navbar Icons -->
                     <ul class="quick-access">
 
                         <li class="account-access rbt-user-wrapper d-none d-xl-block">
-                            <a href="#"><i class="feather-user"></i>{{ request.user.username }}</a>
+                            <a href="#">
+                                <i class="feather-user"></i>
+                                {{ request.user.username }}
+                            </a>
                             <div class="rbt-user-menu-list-wrapper">
                                 <div class="inner">
                                     <ul class="user-list-wrapper">
