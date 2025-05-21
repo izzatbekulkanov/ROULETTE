@@ -201,6 +201,7 @@ def submit_answer(request, slug):
     user = get_user_model().objects.get(id=request.user.id)
     if answer.is_correct:
         user.ball = user.ball + 1
+        user.score = user.score + 1
         user.save()
 
     return JsonResponse({
