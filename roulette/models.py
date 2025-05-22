@@ -166,7 +166,7 @@ class SessionQuestion(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     selected_answer = models.ForeignKey(Answer, on_delete=models.SET_NULL, null=True, blank=True)
     is_correct = models.BooleanField(null=True)  # Null => hali tanlanmagan
-
+    answer_order = models.JSONField(null=True, blank=True)  # Javoblar tartibini saqlash
     class Meta:
         unique_together = ['session', 'question']
 

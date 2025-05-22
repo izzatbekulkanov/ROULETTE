@@ -11,6 +11,7 @@ SECRET_KEY = config('SECRET_KEY')
 # Debug settings
 DEBUG = config('DEBUG', default=False, cast=bool)  # Load from .env, default to False for production
 
+
 # Allowed hosts
 ALLOWED_HOSTS = [
     "localhost",

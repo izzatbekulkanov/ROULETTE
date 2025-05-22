@@ -125,18 +125,15 @@ def prepare_session_questions(session, topic, user, question_limit=10):
 
     session_questions = []
     for q in questions:
-        # Javoblarni olish va ularni aralashtirish
         answers = list(q.answers.all())
         shuffle(answers)
-
-        # SessionQuestion yaratish
-        session_question = SessionQuestion.objects.create(session=session, question=q)
+        session_question = SessionQuestion.objects.create(
+            session=session,
+            question=q,
+            answer_order=[a.id for a in answers]  # Javoblar ID tartibini saqlash
+        )
         session_questions.append(session_question)
 
-        # Javoblarni cache'ga saqlash yoki boshqa usulda saqlash kerak
-        # Chunki keyinroq foydalanuvchiga ko'rsatishda shu aralashgan tartibda chiqarish kerak
-
-    cache.set(f'timer_{user.id}_{topic.slug}', 600, timeout=600)
     return session_questions
 
 @login_required
@@ -151,21 +148,21 @@ def question_session(request, slug):
 
 @login_required
 def get_session_questions_json(request, slug):
+    """Sessiya savollarini JSON formatida qaytaradi."""
     session = get_object_or_404(QuestionSession, user=request.user, topic__slug=slug, is_completed=False)
     questions = []
 
-    for sq in session.session_questions.select_related('question').filter(selected_answer__isnull=True):
+    # Tartibni saqlash uchun select_related va prefetch_related
+    for sq in session.session_questions.select_related('question').prefetch_related('question__answers').filter(selected_answer__isnull=True).order_by('question__id'):
         answers = list(sq.question.answers.all())
-        shuffle(answers)
-
+        if sq.answer_order:
+            answers = sorted(answers, key=lambda x: sq.answer_order.index(x.id) if x.id in sq.answer_order else len(sq.answer_order))
         questions.append({
             'id': sq.question.id,
             'question_text': sq.question.question_text,
-            'answers': [
-                {'id': a.id, 'text': a.answer_text, 'is_correct': a.is_correct} for a in answers
-            ],
-            'selected_answer_id': None,  # Javob berilmagan, shuning uchun null
-            'is_correct': None  # Javob berilmagan, shuning uchun null
+            'answers': [{'id': a.id, 'text': a.answer_text, 'is_correct': a.is_correct} for a in answers],
+            'selected_answer_id': None,
+            'is_correct': None
         })
 
     return JsonResponse({'questions': questions})

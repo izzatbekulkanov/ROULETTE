@@ -1,11 +1,12 @@
 const { createApp } = Vue;
 
 const app = createApp({
+  delimiters: ['[[', ']]'],
   data() {
     return {
       topicSlug: this.extractTopicSlug(),
       questions: [],
-      usedQuestionIds: [],
+      currentQuestionIndex: 0,
       outerAngle: 0,
       innerAngle: 0,
       outerRadius: 270,
@@ -13,10 +14,16 @@ const app = createApp({
       centerX: 300,
       centerY: 300,
       arrowAngle: Math.PI / 90,
-      correctAnswerText: '',
+      selectedAnswer: null,
       isSpinning: false,
-      isLoading: false
+      isLoading: false,
+      isFading: false
     };
+  },
+  computed: {
+    currentQuestion() {
+      return this.questions[this.currentQuestionIndex] || null;
+    }
   },
   mounted() {
     this.canvas = document.getElementById('wheel');
@@ -78,9 +85,10 @@ const app = createApp({
         const data = await this.apiFetch('questions-json/');
         this.questions = (data.questions || []).filter(q => q.selected_answer_id === null).map(q => ({
           ...q,
+          question_text: q.question_text || 'Savol matni yuklanmadi',
           answers: this.shuffleArray([...q.answers])
         }));
-        this.usedQuestionIds = [];
+        this.currentQuestionIndex = 0;
         Swal.close();
         if (!this.questions.length) {
           Swal.fire('Eslatma', 'Javob berilmagan savollar tugadi.', 'info');
@@ -95,23 +103,57 @@ const app = createApp({
         this.isLoading = false;
       }
     },
-    submitAnswer: async function() {
-      const selectedQuestion = this.getSelectedQuestion();
-      if (!selectedQuestion) return;
-      const sectorCount = selectedQuestion.answers.length;
-      const questionIndex = this.getIndex(this.outerAngle, sectorCount);
-      const answerIndex = this.getIndex(this.innerAngle, sectorCount);
-      const question = this.questions[questionIndex];
-      const answer = question?.answers[answerIndex];
+    startSpinAnimation: function(spinCount) {
+      this.isSpinning = true;
+      this.isFading = true; // Savol matni uchun fade effekti
+      this.selectedAnswer = null;
+      const sectorCount = this.currentQuestion?.answers.length || 8;
+      const randomSpins = Math.floor(Math.random() * (spinCount.max - spinCount.min + 1) + spinCount.min);
+      const outerTarget = this.outerAngle + (randomSpins * 2 * Math.PI);
+      const innerTarget = this.innerAngle + (Math.random() * 0.5 - 0.25) * 2 * Math.PI; // Engil tasodifiy ichki aylanish
+      const duration = 2000; // 2 sekund
+      let startTime = null;
 
-      if (!question || !answer) {
-        Swal.fire('Xato', 'Savol yoki javob tanlanmadi.', 'warning');
+      const easeOutQuint = t => 1 - Math.pow(1 - t, 5); // Realistik sekinlashuv
+
+      const animate = (time) => {
+        if (!startTime) startTime = time;
+        const progress = Math.min((time - startTime) / duration, 1);
+        const easedProgress = easeOutQuint(progress);
+        if (progress >= 1) {
+          this.outerAngle = outerTarget;
+          this.innerAngle = innerTarget;
+          this.drawWheel();
+          this.isSpinning = false;
+          this.isFading = false; // Fade effekti tugaydi
+          return;
+        }
+        this.outerAngle = this.outerAngle + (outerTarget - this.outerAngle) * easedProgress;
+        this.innerAngle = this.innerAngle + (innerTarget - this.innerAngle) * easedProgress;
+        this.drawWheel();
+        requestAnimationFrame(animate);
+      };
+      // Savol va javoblar darhol almashadi, fade effekti boshlanadi
+      this.drawWheel();
+      setTimeout(() => {
+        this.isFading = false; // 500ms dan keyin fade effekti tugaydi
+      }, 500);
+      requestAnimationFrame(animate);
+    },
+    submitAnswer: async function() {
+      if (!this.currentQuestion || !this.selectedAnswer) {
+        Swal.fire('Xato', 'Javob tanlanmadi.', 'warning');
+        return;
+      }
+      const answer = this.currentQuestion.answers.find(a => a.id === this.selectedAnswer);
+      if (!answer) {
+        Swal.fire('Xato', 'Javob topilmadi.', 'warning');
         return;
       }
 
       const result = await this.apiFetch('submit-answer/', {
         method: 'POST',
-        body: JSON.stringify({ question_id: question.id, answer_id: answer.id })
+        body: JSON.stringify({ question_id: this.currentQuestion.id, answer_id: answer.id })
       });
 
       Swal.fire({
@@ -119,15 +161,25 @@ const app = createApp({
         title: result.is_correct ? '✅ To‘g‘ri!' : '❌ Noto‘g‘ri!',
         text: result.explanation
       }).then(() => {
-        this.questions.splice(questionIndex, 1);
-        this.usedQuestionIds.push(question.id);
+        this.questions.splice(this.currentQuestionIndex, 1);
         if (this.questions.length === 0) {
           this.completeSession();
-        } else if (this.questions.length === 1) {
-          this.outerAngle = 0;
-          this.drawWheel();
         } else {
-          this.spin();
+          this.currentQuestionIndex = Math.min(this.currentQuestionIndex, this.questions.length - 1);
+          this.startSpinAnimation({ min: 15, max: 20 }); // 15-20 aylanish
+        }
+      });
+    },
+    confirmCompleteSession: async function() {
+      Swal.fire({
+        title: 'Sessiyani yakunlashni xohlaysizmi?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ha',
+        cancelButtonText: 'Yo‘q'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.completeSession();
         }
       });
     },
@@ -140,14 +192,42 @@ const app = createApp({
     checkAnswer: function() {
       this.submitAnswer();
     },
+    spin: function() {
+      if (this.isSpinning || !this.questions.length) {
+        Swal.fire('Eslatma', 'Savollar yo‘q yoki aylantirish davom etmoqda.', 'warning');
+        return;
+      }
+
+      // Javob berilmagan savollarni topish
+      const unansweredQuestions = this.questions.filter((q, index) => index > this.currentQuestionIndex);
+      if (unansweredQuestions.length === 0) {
+        // Agar joriy savol oxirgisi bo'lsa, boshidan boshlash
+        if (this.currentQuestionIndex >= this.questions.length - 1) {
+          this.currentQuestionIndex = 0;
+        } else {
+          Swal.fire('Eslatma', 'Javob berilmagan savollar yo‘q.', 'info');
+          return;
+        }
+      } else {
+        // Keyingi javob berilmagan savolga o'tish
+        this.currentQuestionIndex++;
+      }
+
+      this.startSpinAnimation({ min: 10, max: 15 }); // 10-15 aylanish
+    },
+    rotateInner: function(dir) {
+      if (!this.currentQuestion) return;
+      const sectorCount = this.currentQuestion.answers.length || 8;
+      this.innerAngle += dir * (2 * Math.PI / sectorCount) / 8;
+      const answerIndex = this.getIndex(this.innerAngle, sectorCount);
+      this.selectedAnswer = this.currentQuestion.answers[answerIndex]?.id || null;
+      this.drawWheel();
+    },
     getIndex: function(angle, sectorCount) {
       return Math.floor(((-angle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI) / (2 * Math.PI / sectorCount));
     },
-    getSelectedQuestion: function() {
-      const sectorCount = this.questions[0]?.answers.length || 8;
-      return this.questions[this.getIndex(this.outerAngle, sectorCount)] || null;
-    },
     wrapText: function(text, maxWidth) {
+      if (!text) return [''];
       const words = text.split(' ');
       let lines = [];
       let currentLine = words[0];
@@ -162,19 +242,22 @@ const app = createApp({
         }
       }
       lines.push(currentLine);
+      if (lines.length > 2) {
+        lines = lines.slice(0, 2);
+        lines[1] = lines[1].substring(0, 20) + '...';
+      }
       return lines;
     },
     drawWheel: function() {
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      if (!this.questions.length) {
+      if (!this.currentQuestion) {
         this.ctx.fillStyle = '#004d40';
         this.ctx.font = 'bold 24px Roboto';
         this.ctx.textAlign = 'center';
-        this.ctx.fillText('Savollar tayyorlanmoqda...', this.centerX, 50);
+        this.ctx.fillText('Savollar tayyorlanmoqda...', this.centerX, this.centerY);
         return;
       }
-      const selectedQuestion = this.getSelectedQuestion();
-      const sectorCount = selectedQuestion?.answers.length || 8;
+      const sectorCount = this.currentQuestion.answers.length || 8;
 
       const gradient = this.ctx.createRadialGradient(
         this.centerX + this.outerRadius * Math.cos(this.arrowAngle),
@@ -202,23 +285,7 @@ const app = createApp({
       this.ctx.lineWidth = 4;
       this.ctx.stroke();
 
-      const questionText = selectedQuestion?.question_text || 'Yuklanmoqda...';
-      this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-      this.ctx.fillRect(this.centerX - 250, 20, 500, 60);
-      this.ctx.fillStyle = '#004d40';
-      this.ctx.font = 'bold 24px Roboto';
-      this.ctx.textAlign = 'center';
-      this.ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-      this.ctx.shadowBlur = 4;
-      const lines = this.wrapText('Savol: ' + questionText, 500);
-      lines.forEach((line, index) => {
-        this.ctx.fillText(line, this.centerX, 50 + index * 30);
-      });
-      this.ctx.shadowBlur = 0;
-
-      this.correctAnswerText = selectedQuestion?.answers.find(a => a.is_correct)?.text || 'Noma‘lum';
-
-      const answers = selectedQuestion?.answers || [];
+      const answers = this.currentQuestion.answers || [];
       for (let i = 0; i < sectorCount; i++) {
         const start = this.innerAngle + i * 2 * Math.PI / sectorCount;
         const end = start + 2 * Math.PI / sectorCount;
@@ -245,80 +312,13 @@ const app = createApp({
         this.ctx.rotate(start + Math.PI / sectorCount);
         this.ctx.textAlign = 'right';
         this.ctx.fillStyle = '#000';
-        this.ctx.font = '16px Roboto';
-        this.ctx.fillText(answers[i]?.text || '', this.innerRadius - 15, 5);
+        this.ctx.font = '14px Roboto';
+        const lines = this.wrapText(answers[i]?.text || '', 100);
+        lines.forEach((line, index) => {
+          this.ctx.fillText(line, this.innerRadius - 15, 5 + index * 16);
+        });
         this.ctx.restore();
       }
-    },
-    spin: async function() {
-      if (this.isSpinning || !this.questions.length) {
-        Swal.fire('Eslatma', 'Savollar yo‘q yoki aylantirish davom etmoqda.', 'warning');
-        return;
-      }
-      if (this.questions.length <= 1) {
-        Swal.fire('Eslatma', 'Oxirgi savol, aylantirish mumkin emas.', 'info');
-        return;
-      }
-
-      this.isSpinning = true;
-      const availableQuestions = this.questions.filter(q => !this.usedQuestionIds.includes(q.id));
-      if (!availableQuestions.length) {
-        Swal.fire('Xato', 'Yangi savollar topilmadi.', 'error');
-        this.isSpinning = false;
-        await this.fetchQuestions();
-        return;
-      }
-      const questionIndex = Math.floor(Math.random() * availableQuestions.length);
-      const question = availableQuestions[questionIndex];
-      const actualIndex = this.questions.findIndex(q => q.id === question.id);
-      this.usedQuestionIds.push(question.id);
-      if (!question?.answers) {
-        Swal.fire('Xato', 'Savol yuklanmadi.', 'error');
-        this.isSpinning = false;
-        return;
-      }
-
-      const correctAnswerIndex = question.answers.findIndex(a => a.is_correct);
-      if (correctAnswerIndex === -1) {
-        Swal.fire('Xato', 'To‘g‘ri javob yo‘q.', 'error');
-        this.isSpinning = false;
-        return;
-      }
-
-      const sectorCount = question.answers.length;
-      const randomOuter = (actualIndex * (2 * Math.PI / sectorCount)) + (Math.random() * 0.1);
-      const randomInner = (correctAnswerIndex * (2 * Math.PI / sectorCount)) + this.arrowAngle;
-      const outerTarget = this.outerAngle + randomOuter + 2 * Math.PI;
-      const innerTarget = this.innerAngle - randomInner;
-      const duration = 1000;
-      let startTime = null;
-
-      const easeOutQuad = t => t * (2 - t) * 1.2;
-
-      const animate = (time) => {
-        if (!startTime) startTime = time;
-        const progress = Math.min((time - startTime) / duration, 1);
-        const easedProgress = easeOutQuad(progress);
-        if (progress >= 1) {
-          this.outerAngle = outerTarget;
-          this.innerAngle = innerTarget;
-          this.drawWheel();
-          this.isSpinning = false;
-          return;
-        }
-        this.outerAngle = this.outerAngle + (outerTarget - this.outerAngle) * easedProgress;
-        this.innerAngle = this.innerAngle + (innerTarget - this.innerAngle) * easedProgress;
-        this.drawWheel();
-        requestAnimationFrame(animate);
-      };
-      requestAnimationFrame(animate);
-    },
-    rotateInner: function(dir) {
-      if (!this.questions.length) return;
-      const selectedQuestion = this.getSelectedQuestion();
-      const sectorCount = selectedQuestion?.answers.length || 8;
-      this.innerAngle += dir * (2 * Math.PI / sectorCount) / 8;
-      this.drawWheel();
     },
     shuffleArray: function(array) {
       for (let i = array.length - 1; i > 0; i--) {

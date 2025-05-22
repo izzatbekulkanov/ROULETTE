@@ -14,6 +14,11 @@
     <header>
         <h1>Ta'limiy Ruletka</h1>
     </header>
+    <div class="question-container">
+        <div class="progress-indicator">Savol [[ currentQuestionIndex + 1 ]] / [[ questions.length ]]</div>
+        <div class="question-text" v-if="currentQuestion">[[ currentQuestion.question_text ]]</div>
+        <div class="question-text" v-else>Savollar yuklanmoqda...</div>
+    </div>
     <div class="game-card">
         <div class="game-area">
             <div class="wheel-container">
@@ -24,8 +29,8 @@
             <button @click="spin" class="btn btn-primary">Aylantir</button>
             <button @click="rotateInner(-1)" class="btn btn-secondary">⬅</button>
             <button @click="rotateInner(1)" class="btn btn-secondary">➡</button>
-            <button @click="checkAnswer" class="btn btn-primary">Tekshir</button>
-            <button @click="completeSession" class="btn btn-complete">Yakunla</button>
+            <button @click="checkAnswer" class="btn btn-primary" :disabled="!selectedAnswer">Tekshir</button>
+            <button @click="confirmCompleteSession" class="btn btn-complete">Yakunla</button>
         </div>
     </div>
 </div>

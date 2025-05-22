@@ -12,6 +12,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
 }
 
 .container {
@@ -29,6 +30,37 @@ h1 {
   font-size: 2rem;
   font-weight: 700;
   color: #004d40;
+}
+
+.question-container {
+  max-width: 600px;
+  width: 100%;
+  margin: 10px auto;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.question-text {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #004d40;
+  line-height: 1.4;
+  word-wrap: break-word;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.question-text.fade {
+  opacity: 0;
+}
+
+.progress-indicator {
+  font-size: 0.9rem;
+  color: #00695c;
+  text-align: center;
+  margin-bottom: 10px;
 }
 
 .game-card {
@@ -121,6 +153,12 @@ canvas {
   transform: translateY(0);
 }
 
+.btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
@@ -140,6 +178,10 @@ canvas {
     width: 100%;
     max-width: 200px;
     margin: 0 auto;
+  }
+  .question-container {
+    max-width: 100%;
+    padding: 10px;
   }
 }
 
@@ -161,5 +203,21 @@ canvas {
   .controls {
     flex-direction: column;
     gap: 5px;
+  }
+  .question-text {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 400px) {
+  canvas {
+    width: 240px;
+    height: 240px;
+  }
+  .wheel-container {
+    padding: 4px;
+  }
+  .question-text {
+    font-size: 0.9rem;
   }
 }
