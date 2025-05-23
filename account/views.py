@@ -10,87 +10,97 @@ import json
 
 @csrf_exempt
 def login_view(request):
-    print(f"Login view called with method: {request.method}")
     if request.method == 'POST':
         try:
-            data = json.loads(request.body)
-            print(f"Login POST data: {data}")
-            email_or_username = data.get('email_or_username')
-            password = data.get('password')
-
-            if not email_or_username or not password:
-                print("Error: Email/username or password missing")
+            # JSON ma'lumotlarni o'qish
+            try:
+                data = json.loads(request.body)
+            except json.JSONDecodeError:
                 return JsonResponse({
-                    'message': 'Kirish muvaffaqiyatsiz',
-                    'errors': {'error': 'Email/foydalanuvchi nomi va parol kiritilishi shart'}
+                    'success': False,
+                    'message': 'Noto‘g‘ri JSON formati',
+                    'errors': {}
                 }, status=400)
 
-            user = None
-            if '@' in email_or_username:
-                print(f"Attempting login with email: {email_or_username}")
-                try:
-                    user_obj = CustomUser.objects.get(email=email_or_username)
-                    print(f"Email found in database: {user_obj.email}")
-                    user = authenticate(request, email=email_or_username, password=password)
-                    print(f"Authenticate result for email: {user}")
-                except CustomUser.DoesNotExist:
-                    print(f"Email not found: {email_or_username}")
-                    return JsonResponse({
-                        'message': 'Kirish muvaffaqiyatsiz',
-                        'errors': {'error': 'Email mavjud emas'}
-                    }, status=401)
-            else:
-                print(f"Attempting login with username: {email_or_username}")
-                try:
-                    user_obj = CustomUser.objects.get(username=email_or_username)
-                    print(f"Username found in database: {user_obj.username}, associated email: {user_obj.email}")
-                    user = authenticate(request, email=user_obj.email, password=password)
-                    print(f"Authenticate result for username: {user}")
-                except CustomUser.DoesNotExist:
-                    print(f"Username not found: {email_or_username}")
-                    return JsonResponse({
-                        'message': 'Kirish muvaffaqiyatsiz',
-                        'errors': {'error': 'Foydalanuvchi nomi mavjud emas'}
-                    }, status=401)
+            email_or_username = data.get('email_or_username', '').strip()
+            password = data.get('password', '').strip()
 
-            if user is None:
-                print(f"Authentication failed for email/username: {email_or_username}")
+            # Validatsiya
+            if not email_or_username or not password:
                 return JsonResponse({
-                    'message': 'Kirish muvaffaqiyatsiz',
-                    'errors': {'error': 'Noto‘g‘ri email/foydalanuvchi nomi yoki parol'}
+                    'success': False,
+                    'message': 'Iltimos, barcha maydonlarni to‘ldiring',
+                    'errors': {
+                        'email_or_username': 'Email yoki foydalanuvchi nomi kiritilishi shart' if not email_or_username else None,
+                        'password': 'Parol kiritilishi shart' if not password else None
+                    }
+                }, status=400)
+
+            # Foydalanuvchini topish va autentifikatsiya qilish
+            user = None
+
+            # Email orqali izlash
+            if '@' in email_or_username:
+                try:
+                    user_obj = CustomUser.objects.get(email__iexact=email_or_username)
+                    user = authenticate(request, email=user_obj.email, password=password)
+                except CustomUser.DoesNotExist:
+                    pass
+            # Username orqali izlash
+            else:
+                try:
+                    user_obj = CustomUser.objects.get(username__iexact=email_or_username)
+                    user = authenticate(request, email=user_obj.email, password=password)
+                except CustomUser.DoesNotExist:
+                    pass
+
+            # Autentifikatsiya natijasini tekshirish
+            if user is None:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Noto‘g‘ri email/foydalanuvchi nomi yoki parol',
+                    'errors': {}
                 }, status=401)
 
-            print(f"User authenticated: {user.email}")
+            # Agar foydalanuvchi aktiv bo'lmasa
+            if not user.is_active:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Ushbu hisob faol emas',
+                    'errors': {}
+                }, status=403)
+
+            # Muvaffaqiyatli kirish
             login(request, user)
             refresh = RefreshToken.for_user(user)
-            print(f"Tokens generated for user: {user.email}")
+
             return JsonResponse({
+                'success': True,
                 'message': 'Kirish muvaffaqiyatli',
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
+                'tokens': {
+                    'refresh': str(refresh),
+                    'access': str(refresh.access_token),
+                },
                 'user': {
+                    'id': user.id,
                     'email': user.email,
+                    'username': user.username,
                     'first_name': user.first_name,
-                    'role': user.role
+                    'last_name': user.last_name,
+                    'role': user.role,
+                    'is_active': user.is_active
                 }
             }, status=200)
 
-        except json.JSONDecodeError:
-            print("Error: Invalid JSON data in login POST")
-            return JsonResponse({
-                'message': 'Xato yuz berdi',
-                'errors': {'error': 'Noto‘g‘ri JSON formati'}
-            }, status=400)
         except Exception as e:
-            print(f"Unexpected error during login: {str(e)}")
             return JsonResponse({
-                'message': 'Xato yuz berdi',
-                'errors': {'error': f'Noma’lum xato: {str(e)}'}
+                'success': False,
+                'message': 'Server xatosi',
+                'errors': {'error': str(e)}
             }, status=500)
 
-    print("Rendering login template")
+    # GET so'rovlari uchun HTML sahifasini qaytarish
     return render(request, 'account/login.html')
-
 
 @csrf_exempt
 def register_view(request):
@@ -104,21 +114,30 @@ def register_view(request):
             password = data.get('password')
 
             if not (first_name and last_name and email and username and password):
-                return JsonResponse({'message': 'Barcha maydonlar to‘ldirilishi shart'}, status=400)
+                return JsonResponse({'success': False, 'message': 'Barcha maydonlar to‘ldirilishi shart'}, status=400)
 
             if CustomUser.objects.filter(username=username).exists():
-                return JsonResponse({'message': 'Foydalanuvchi nomi allaqachon mavjud'}, status=400)
+                return JsonResponse({'success': False, 'message': 'Foydalanuvchi nomi allaqachon mavjud'}, status=400)
 
             if CustomUser.objects.filter(email=email).exists():
-                return JsonResponse({'message': 'Email allaqachon mavjud'}, status=400)
+                return JsonResponse({'success': False, 'message': 'Email allaqachon mavjud'}, status=400)
 
-            user = CustomUser.objects.create_user(username=username, email=email, password=password,
-                                                  first_name=first_name,
-                                                  last_name=last_name)
-            return JsonResponse({'message': 'Ro‘yxatdan o‘tish muvaffaqiyatli'}, status=201)
+            # Foydalanuvchini yaratish
+            CustomUser.objects.create_user(
+                username=username, email=email, password=password,
+                first_name=first_name, last_name=last_name
+            )
+
+            # Muvaffaqiyatli javob
+            return JsonResponse({
+                'success': True,
+                'message': 'Ro‘yxatdan o‘tish muvaffaqiyatli!',
+                'redirect': '/account/login/',
+                'tokens': None  # Agar tokenlar kerak bo'lsa, bu yerga qo'shiladi
+            }, status=201)
 
         except json.JSONDecodeError:
-            return JsonResponse({'message': 'Noto‘g‘ri JSON formati'}, status=400)
+            return JsonResponse({'success': False, 'message': 'Noto‘g‘ri JSON formati'}, status=400)
 
     return render(request, 'account/register.html')
 

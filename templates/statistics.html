@@ -137,49 +137,6 @@
                 <p class="text-muted">O'rtacha to'g'ri javob foizi: <span class="fw-medium">{{ avg_correct_percentage }}%</span></p>
             </div>
         </section>
-
-        <!-- Eng ko'p xato va to'g'ri javob berilgan savollar -->
-        <section class="mb-12">
-            <h2 class="text-3xl font-bold text-dark mb-0 section-header">Savollar bo'yicha</h2>
-            <div class="row row-cols-1 row-cols-lg-2 g-4">
-                <!-- Xato qilingan savollar -->
-                <div class="col">
-                    <h3 class="text-xl font-semibold text-dark mb-4">Eng ko'p xato qilingan savollar</h3>
-                    {% if incorrect_questions %}
-                        <div class="row g-4">
-                            {% for question in incorrect_questions %}
-                                <div class="col-12">
-                                    <div class="bg-danger bg-opacity-10 p-4 rounded-3">
-                                        <p class="text-dark">{{ question.question__question_text|truncatechars:50 }}</p>
-                                        <p class="text-danger">Xato soni: <span class="fw-medium">{{ question.error_count }}</span></p>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="text-muted py-4">Hozircha xato qilingan savollar yo'q.</p>
-                    {% endif %}
-                </div>
-                <!-- To'g'ri javob berilgan savollar -->
-                <div class="col">
-                    <h3 class="text-xl font-semibold text-dark mb-4">Eng ko'p to'g'ri javob berilgan savollar</h3>
-                    {% if correct_questions %}
-                        <div class="row g-4">
-                            {% for question in correct_questions %}
-                                <div class="col-12">
-                                    <div class="bg-success bg-opacity-10 p-4 rounded-3">
-                                        <p class="text-dark">{{ question.question__question_text|truncatechars:50 }}</p>
-                                        <p class="text-success">To'g'ri soni: <span class="fw-medium">{{ question.correct_count }}</span></p>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="text-muted py-4">Hozircha to'g'ri javob berilgan savollar yo'q.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </section>
     </div>
     {% endblock content %}
 

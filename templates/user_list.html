@@ -2,39 +2,94 @@
 {% load static %}
 
 {% block meta %}
-    <title>Foydalanuvchilar ro'yxati</title>
+<title>Foydalanuvchilar ro'yxati</title>
 {% endblock meta %}
 
 {% block style %}
-    <style>
-        .table-hover tbody tr:hover {
-            background-color: #f8f9fa;
-            transition: background-color 0.2s ease;
-        }
-        .btn-detail {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .btn-detail:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        .search-form {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-    </style>
+<style>
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+        transition: background-color 0.2s ease;
+    }
+
+    .btn-detail {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn-detail:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .search-form {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    /* Toggle Switch Styles */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 20px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        border-radius: 20px;
+        transition: background-color 0.3s ease;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        width: 16px;
+        height: 16px;
+        left: 2px;
+        bottom: 2px;
+        background-color: #fff;
+        border-radius: 50%;
+        transition: transform 0.3s ease;
+    }
+
+    input:checked + .slider {
+        background-color: #28a745;
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(20px);
+    }
+
+    .switch:hover .slider {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+</style>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 {% endblock style %}
 
 {% block content %}
-    <div class="container py-5 px-3">
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-4">
-                <h2 class="card-title text-center mb-4 fw-bold fs-3">👥 Foydalanuvchilar ro'yxati</h2>
+<div class="container py-5 px-3">
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <h2 class="card-title text-center mb-4 fw-bold fs-3">👥 Foydalanuvchilar ro'yxati</h2>
 
-                <!-- Qidirish formasi -->
-                <form method="get" class="search-form mb-4">
-                    <div class="input-group">
-                        <input
+            <!-- Qidirish formasi -->
+            <form method="get" class="search-form mb-4">
+                <div class="input-group">
+                    <input
                             type="search"
                             name="q"
                             class="form-control"
@@ -42,86 +97,174 @@
                             aria-label="Qidirish"
                             value="{{ query }}"
                             autocomplete="off"
-                        >
-                        <button class="btn btn-primary" type="submit">
-                            Qidirish
-                        </button>
-                    </div>
-                </form>
+                    >
+                    <button class="btn btn-primary" type="submit">
+                        Qidirish
+                    </button>
+                </div>
+            </form>
 
-                <!-- Foydalanuvchilar jadvali -->
-                {% if users %}
-                    <div class="table-responsive">
-                        <table class="table table-hover table-bordered align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th scope="col" class="p-3">Email</th>
-                                    <th scope="col" class="p-3">Ism</th>
-                                    <th scope="col" class="p-3">Familiya</th>
-                                    <th scope="col" class="p-3">Rol</th>
-                                    <th scope="col" class="p-3">Telefon</th>
-                                    <th scope="col" class="p-3">Jins</th>
-                                    <th scope="col" class="p-3">Tug‘ilgan sana</th>
-                                    <th scope="col" class="p-3">Harakat</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for user in users %}
-                                    <tr>
-                                        <td class="p-3">{{ user.email }}</td>
-                                        <td class="p-3">{{ user.first_name|default:"-" }}</td>
-                                        <td class="p-3">{{ user.last_name|default:"-" }}</td>
-                                        <td class="p-3">{{ user.get_role_display|default:"-" }}</td>
-                                        <td class="p-3">{{ user.phone_number|default:"-" }}</td>
-                                        <td class="p-3">{{ user.get_gender_display|default:"-" }}</td>
-                                        <td class="p-3">{{ user.birth_date|date:"Y-m-d"|default:"-" }}</td>
-                                        <td class="p-3">
-                                            <a href="{% url 'roulette:user_detail' user.id %}" class="btn-detail btn btn-sm btn-primary">
-                                                Batafsil
-                                            </a>
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <div class="alert alert-warning text-center" role="alert">
-                        Hech qanday foydalanuvchi topilmadi.
-                    </div>
-                {% endif %}
-
-                <!-- Paginatsiya -->
-                {% if users.has_other_pages %}
-                    <nav aria-label="Sahifalash" class="mt-4">
-                        <ul class="pagination justify-content-center">
-                            <li class="page-item {% if not users.has_previous %}disabled{% endif %}">
-                                <a class="page-link" href="?q={{ query }}&page={{ users.previous_page_number }}" tabindex="-1" aria-disabled="true">« Oldingi</a>
-                            </li>
-                            {% for num in users.paginator.page_range %}
-                                {% if users.number == num %}
-                                    <li class="page-item active" aria-current="page">
-                                        <span class="page-link">{{ num }}</span>
-                                    </li>
-                                {% elif num > users.number|add:'-3' and num < users.number|add:'3' %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?q={{ query }}&page={{ num }}">{{ num }}</a>
-                                    </li>
-                                {% endif %}
-                            {% endfor %}
-                            <li class="page-item {% if not users.has_next %}disabled{% endif %}">
-                                <a class="page-link" href="?q={{ query }}&page={{ users.next_page_number }}">Keyingi »</a>
-                            </li>
-                        </ul>
-                    </nav>
-                {% endif %}
+            <!-- Foydalanuvchilar jadvali -->
+            {% if users %}
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th scope="col" class="p-3">#</th>
+                        <th scope="col" class="p-3">Email</th>
+                        <th scope="col" class="p-3">Ism</th>
+                        <th scope="col" class="p-3">Familiya</th>
+                        <th scope="col" class="p-3">Rol</th>
+                        <th scope="col" class="p-3">Telefon</th>
+                        <th scope="col" class="p-3">Jins</th>
+                        <th scope="col" class="p-3">Tug‘ilgan sana</th>
+                        <th scope="col" class="p-3">Score</th>
+                        <th scope="col" class="p-3">Faol holati</th>
+                        <th scope="col" class="p-3">Harakat</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td class="p-3">{{ forloop.counter0|add:page_obj.start_index }}</td>
+                        <td class="p-3">{{ user.email }}</td>
+                        <td class="p-3">{{ user.first_name|default:"-" }}</td>
+                        <td class="p-3">{{ user.last_name|default:"-" }}</td>
+                        <td class="p-3">{{ user.get_role_display|default:"-" }}</td>
+                        <td class="p-3">{{ user.phone_number|default:"-" }}</td>
+                        <td class="p-3">{{ user.get_gender_display|default:"-" }}</td>
+                        <td class="p-3">{{ user.birth_date|date:"Y-m-d"|default:"-" }}</td>
+                        <td class="p-3">{{ user.score|default:"-" }}</td>
+                        <td class="p-3 text-center">
+                            <label class="switch">
+                                <input
+                                        type="checkbox"
+                                        {% if user.is_active %}checked{% endif %}
+                                        data-user-id="{{ user.id|stringformat:'s' }}"
+                                        class="user-status-toggle"
+                                        aria-label="Foydalanuvchi faol holati"
+                                        data-toggle="switch"
+                                >
+                                <span class="slider round"></span>
+                            </label>
+                        </td>
+                        <td class="p-3">
+                            <a href="{% url 'roulette:user_detail' user.id %}"
+                               class="btn-detail btn btn-sm btn-primary">
+                                Batafsil
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
             </div>
+            {% else %}
+            <div class="alert alert-warning text-center" role="alert">
+                Hech qanday foydalanuvchi topilmadi.
+            </div>
+            {% endif %}
+
+            <!-- Paginatsiya -->
+            {% if users.has_other_pages %}
+            <nav aria-label="Sahifalash" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item {% if not users.has_previous %}disabled{% endif %}">
+                        <a class="page-link" href="?q={{ query }}&page={{ users.previous_page_number }}" tabindex="-1"
+                           aria-disabled="true">« Oldingi</a>
+                    </li>
+                    {% for num in users.paginator.page_range %}
+                    {% if users.number == num %}
+                    <li class="page-item active" aria-current="page">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > users.number|add:'-3' and num < users.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?q={{ query }}&page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+                    <li class="page-item {% if not users.has_next %}disabled{% endif %}">
+                        <a class="page-link" href="?q={{ query }}&page={{ users.next_page_number }}">Keyingi »</a>
+                    </li>
+                </ul>
+            </nav>
+            {% endif %}
         </div>
     </div>
+</div>
 {% endblock content %}
 
 {% block extra_js %}
-    <script>
-        // Agar qidirish formasiga real vaqt rejimida qidirish yoki boshqa interaktivlik qo'shmoqchi bo'lsangiz, bu yerga yozishingiz mumkin
-    </script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function getCsrfToken() {
+        return document.cookie.split('; ').find(row => row.startsWith('csrftoken'))?.split('=')[1] || '';
+    }
+
+    // Debounce funksiyasi: so'rovlarni cheklash uchun
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    async function updateUserStatus(userId, isActive, element) {
+        // Toggle switch ni vaqtincha o'chirish
+        element.disabled = true;
+        try {
+            const response = await fetch(`/users/${userId}/update_status/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify({is_active: isActive})
+            });
+
+            if (!response.ok) {
+                throw new Error(`Server xatosi: ${response.status}`);
+            }
+
+            const data = await response.json();
+            Swal.fire({
+                icon: 'success',
+                title: 'Muvaffaqiyatli!',
+                text: `Foydalanuvchi holati ${isActive ? 'faol' : 'faol emas'} qilib o'zgartirildi.`,
+                timer: 1500,
+                showConfirmButton: false
+            });
+        } catch (error) {
+            // Xato bo'lsa, toggle switch holatini qaytarish
+            element.checked = !isActive;
+            Swal.fire({
+                icon: 'error',
+                title: 'Xato',
+                text: `Holati o'zgartirishda xato: ${error.message}`,
+            });
+        } finally {
+            element.disabled = false;
+        }
+    }
+
+    // Debounce qilingan update funksiyasi
+    const debouncedUpdateUserStatus = debounce(updateUserStatus, 300);
+
+    // Event listenerlarni o'rnatish
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.user-status-toggle').forEach(toggle => {
+            toggle.addEventListener('change', (event) => {
+                const userId = event.target.getAttribute('data-user-id');
+                const isActive = event.target.checked;
+                debouncedUpdateUserStatus(userId, isActive, event.target);
+            });
+        });
+    });
+</script>
 {% endblock extra_js %}

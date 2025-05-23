@@ -13,7 +13,7 @@ from .models import Question, Answer, Subject, Topic, UserTopicProgress, UserAns
     GameLog
 from random import shuffle
 from django.core.paginator import Paginator
-from django.db.models import Count, Sum
+from django.views.decorators.http import require_POST
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
 from django.db import models
@@ -57,6 +57,7 @@ def subject_topics_view(request, slug):
     return render(request, 'subject_topics.html', context)
 
 
+@login_required
 def topic_detail_main(request, slug):
     """
     Display topic details with user progress, questions, and session information.
@@ -67,10 +68,12 @@ def topic_detail_main(request, slug):
         slug=slug
     )
 
-    # 2. Get all questions for the topic with user answers prefetched
+    # 2. Get all questions for the topic with 2+ answers, with user answers prefetched
     questions = (
         Question.objects
         .filter(topic=topic)
+        .annotate(answer_count=Count('answers'))
+        .filter(answer_count__gte=2)
         .order_by('-created_at')
         .prefetch_related(
             Prefetch(
@@ -81,19 +84,26 @@ def topic_detail_main(request, slug):
         )
     )
 
-    # 3. Pagination - 10 questions per page
+    # 3. Calculate unanswered questions
+    total_valid_questions = questions.count()
+    answered_questions_count = sum(
+        1 for q in questions if hasattr(q, 'current_user_answers') and q.current_user_answers
+    )
+    has_unanswered_questions = total_valid_questions > answered_questions_count
+
+    # 4. Pagination - 10 questions per page
     paginator = Paginator(questions, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    # 4. Get user progress for this topic
+    # 5. Get user progress for this topic
     user_progress = (
         UserTopicProgress.objects
         .filter(user=request.user, topic=topic)
         .first()
     )
 
-    # 5. Get the latest test session for this user and topic
+    # 6. Get the latest test session for this user and topic
     question_session = (
         QuestionSession.objects
         .filter(user=request.user, topic=topic)
@@ -101,27 +111,63 @@ def topic_detail_main(request, slug):
         .first()
     )
 
-    # 6. Prepare context data
+    # 7. Prepare context data
     context = {
         'topic': topic,
         'subject': topic.subject,
         'page_obj': page_obj,
-        'total_questions': questions.count(),
+        'total_questions': total_valid_questions,
         'user_progress': user_progress,
         'question_session': question_session,
-        'answered_questions_count': sum(
-            1 for q in questions if hasattr(q, 'current_user_answers') and q.current_user_answers
-        ),
+        'answered_questions_count': answered_questions_count,
+        'has_unanswered_questions': has_unanswered_questions,
     }
 
     return render(request, 'topic_detail_main.html', context)
 
+@login_required
+@require_POST
+def clear_topic_progress(request, slug):
+    """
+    Clear all UserAnswer and UserTopicProgress records for the current user and specified topic.
+    Only questions with 2 or more answers are considered.
+    """
+    try:
+        topic = get_object_or_404(Topic, slug=slug)
+        # Get questions with 2+ answers for the topic
+        valid_questions = Question.objects.filter(
+            topic=topic
+        ).annotate(
+            answer_count=Count('answers')
+        ).filter(
+            answer_count__gte=2
+        ).values('id')
+        # Delete UserAnswer records for valid questions
+        UserAnswer.objects.filter(
+            user=request.user,
+            question__id__in=valid_questions
+        ).delete()
+        # Delete UserTopicProgress record for the topic
+        UserTopicProgress.objects.filter(
+            user=request.user,
+            topic=topic
+        ).delete()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 def prepare_session_questions(session, topic, user, question_limit=10):
     """Foydalanuvchi uchun savollarni tayyorlaydi (javoblar ketma-ketligi aralashgan holda)."""
+    # Foydalanuvchi to'g'ri javob bergan savollar ID larini olish
     answered_ids = UserAnswer.objects.filter(user=user, question__topic=topic, is_correct=True).values_list(
         'question_id', flat=True)
-    questions = topic.questions.exclude(id__in=answered_ids).order_by('?')[:question_limit]
+
+    # Kamida 2 ta javobga ega, to'g'ri javob berilmagan savollarni tanlash
+    questions = topic.questions.exclude(id__in=answered_ids).annotate(
+        answers_count=Count('answers')
+    ).filter(
+        answers_count__gte=2
+    ).order_by('?')[:question_limit]
 
     session_questions = []
     for q in questions:
@@ -252,13 +298,24 @@ def sciences_view(request):
 @login_required
 def science_detail(request, slug):
     subject = get_object_or_404(Subject, slug=slug)
-    topics = subject.topics.all().annotate(questions_count=Count('questions'))
+    # Annotate topics with the count of questions that have 2 or more answers
+    topics = subject.topics.all().annotate(
+        questions_count=Count('questions', filter=Question.objects.annotate(
+            answer_count=Count('answers')
+        ).filter(answer_count__gte=2).values('id'))
+    )
 
-    # Mavzular soni
+    # Total number of questions with 2 or more answers across all topics
+    questions_count = Question.objects.filter(
+        topic__subject=subject
+    ).annotate(
+        answer_count=Count('answers')
+    ).filter(
+        answer_count__gte=2
+    ).count()
+
+    # Number of topics
     topics_count = topics.count()
-
-    # Savollar soni — barcha mavzular bo‘yicha jami savollar soni
-    questions_count = topics.aggregate(total=Sum('questions_count'))['total'] or 0
 
     if request.method == 'POST':
         form = TopicForm(request.POST)
@@ -268,7 +325,7 @@ def science_detail(request, slug):
             topic.created_by = request.user
             topic.save()
             messages.success(request, '✅ Yangi mavzu muvaffaqiyatli qo‘shildi!')
-            return redirect('roulette:science_detail', slug=subject.slug)
+            return redirect('roulette:topic_detail', slug=topic.slug)  # Redirect to new topic page
         else:
             messages.error(request, '❌ Mavzuni qo‘shishda xatolik yuz berdi.')
     else:
@@ -281,7 +338,6 @@ def science_detail(request, slug):
         'questions_count': questions_count,
         'form': form,
     })
-
 
 @login_required
 def add_sciences_view(request):
@@ -526,6 +582,30 @@ class CustomUserListView(ListView):
         context = super().get_context_data(**kwargs)
         context['query'] = self.request.GET.get('q', '')
         return context
+
+def update_status(request, user_id):
+    try:
+        user = get_object_or_404(CustomUser, id=user_id)
+        data = json.loads(request.body)
+        is_active = data.get('is_active')
+
+        if not isinstance(is_active, bool):
+            return JsonResponse({'error': 'is_active boolean bo‘lishi kerak'}, status=400)
+
+        user.is_active = is_active
+        user.save(update_fields=['is_active'])
+
+        return JsonResponse({
+            'success': True,
+            'message': f'Foydalanuvchi holati { "faol" if is_active else "faol emas" } qilib o‘zgartirildi.'
+        })
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Noto‘g‘ri JSON formati'}, status=400)
+    except CustomUser.DoesNotExist:
+        return JsonResponse({'error': 'Foydalanuvchi topilmadi'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': f'Xato: {str(e)}'}, status=500)
+
 
 class CustomUserDetailView(DetailView):
     model = CustomUser

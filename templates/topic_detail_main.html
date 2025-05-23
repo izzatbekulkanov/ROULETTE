@@ -1,7 +1,6 @@
 {% extends "main.html" %}
 {% load static %}
 
-
 {% block meta %}
 <title>{{ topic.name }} - Savollar | Ta'limiy Ruletka</title>
 <meta name="description" content="{{ topic.name }} mavzusiga oid savollar va statistika.">
@@ -9,26 +8,6 @@
 
 {% block style %}
 <style>
-    .rbt-section-gap {
-        padding: 3rem 0;
-    }
-
-    .stats-box {
-        background-color: #f8f9fa;
-        padding: 1rem;
-        border-radius: 8px;
-        margin-bottom: 2rem;
-    }
-
-    .start-button {
-        margin-top: 1.5rem;
-    }
-
-    .no-questions {
-        font-size: 1.1rem;
-        color: #6c757d;
-    }
-
     .rbt-section-gap {
         padding: 3rem 0;
     }
@@ -60,6 +39,37 @@
         transform: scale(1.05);
         box-shadow: 0 4px 15px rgba(0, 128, 0, 0.3);
     }
+
+    .clear-button {
+        font-size: 1.5rem;
+        padding: 1rem 3rem;
+        border-radius: 50px;
+        background: linear-gradient(45deg, #dc3545, #ff4d4d);
+        border: none;
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin-top: 1.5rem;
+        margin-left: 1rem;
+        display: inline-block;
+        color: white;
+    }
+
+    .clear-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 15px rgba(200, 0, 0, 0.3);
+    }
+
+    .disabled-button {
+        font-size: 1.5rem;
+        padding: 1rem 3rem;
+        border-radius: 50px;
+        background: #6c757d;
+        border: none;
+        margin-top: 1.5rem;
+        display: inline-block;
+        color: white;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
 </style>
 {% endblock style %}
 
@@ -68,15 +78,12 @@
     <div class="container">
         <!-- Sarlavha qismi -->
         <div class="text-center mb-5 relative">
-            <!-- Ortga qaytish tugmasi -->
-
-
-            <h2 class="title mb-3">{{ topic.name }}</h2>
-            <p class="text-muted mb-0">{{ subject.name }} fani</p>
             <button onclick="window.history.back()"
-                    class="btn btn-outline-primary  ">
+                    class="btn btn-outline-primary">
                 <i class="feather-arrow-left"></i> Ortga qaytish
             </button>
+            <h2 class="title mb-3">{{ topic.name }}</h2>
+            <p class="text-muted mb-0">{{ subject.name }} fani</p>
         </div>
 
         <!-- Asosiy statistikalar paneli -->
@@ -242,18 +249,18 @@
                                 {% with answer=question.current_user_answers.0 %}
                                 {% if answer.is_correct %}
                                 <span class="badge bg-success">
-                                                <i class="fas fa-check me-1"></i> To'g'ri
-                                            </span>
+                                    <i class="fas fa-check me-1"></i> To'g'ri
+                                </span>
                                 {% else %}
                                 <span class="badge bg-danger">
-                                                <i class="fas fa-times me-1"></i> Noto'g'ri
-                                            </span>
+                                    <i class="fas fa-times me-1"></i> Noto'g'ri
+                                </span>
                                 {% endif %}
                                 {% endwith %}
                                 {% else %}
                                 <span class="badge bg-secondary">
-                                        <i class="fas fa-question me-1"></i> Javob berilmagan
-                                    </span>
+                                    <i class="fas fa-question me-1"></i> Javob berilmagan
+                                </span>
                                 {% endif %}
                             </td>
                             <td>
@@ -319,12 +326,22 @@
             </div>
         </div>
 
-        <!-- Testni boshlash tugmasi -->
+        <!-- Testni boshlash va tozalash tugmalari -->
         {% if total_questions > 0 %}
         <div class="text-center mt-4">
+            {% if has_unanswered_questions %}
             <a href="{% url 'roulette:question_session' topic.slug %}"
-               class="btn btn-success btn-lg px-5 py-3">
+               class="start-button btn btn-success btn-lg">
                 <i class="fas fa-play me-2"></i> Testni boshlash
+            </a>
+            {% else %}
+            <button class="disabled-button btn btn-lg" disabled title="Barcha savollarga javob berilgan">
+                <i class="fas fa-play me-2"></i> Testni boshlash
+            </button>
+            <p class="text-muted mt-2">Barcha savollarga javob berilgan. Progressni tozalash uchun "Tozalash" tugmasini bosing.</p>
+            {% endif %}
+            <a href="#" class="clear-button btn btn-danger btn-lg" onclick="clearProgress('{% url 'roulette:clear_topic_progress' topic.slug %}')">
+                <i class="fas fa-trash me-2"></i> Tozalash
             </a>
         </div>
         {% endif %}
@@ -376,5 +393,31 @@
             });
         }, 5000);
     });
+
+    // Tozalash tugmasi uchun AJAX so'rov
+    function clearProgress(url) {
+        if (confirm("Rostdan ham ushbu mavzu bo'yicha progressni tozalashni xohlaysizmi? Bu amal qaytarib bo'lmaydi!")) {
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Progress muvaffaqiyatli tozalandi!');
+                    window.location.reload();
+                } else {
+                    alert('Xatolik yuz berdi: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Xatolik yuz berdi: ' + error);
+            });
+        }
+    }
 </script>
 {% endblock extra_js %}

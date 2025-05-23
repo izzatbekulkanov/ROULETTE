@@ -40,7 +40,6 @@
                             <div class="tutor-content">
                                 <h5 class="title">{{ subject.name }}</h5>
                                 <div class="rbt-review">
-                                    <span class="rating-count"> (15 Reviews)</span>
                                 </div>
                                 <ul class="rbt-meta rbt-meta-white mt--5">
                                     <li><i class="feather-book-open"></i> {{ topics_count }} mavzular</li>
@@ -96,10 +95,6 @@
                                     <!-- 🗑️ O‘chirish -->
 
                                     {% csrf_token %}
-<!--                                    <button type="submit" class="btn btn-sm btn-danger"-->
-<!--                                            onclick="return confirm('Haqiqatan ham o‘chirmoqchimisiz?')">-->
-<!--                                        <i class="feather-trash-2"></i> O‘chirish-->
-<!--                                    </button>-->
                                 </div>
                             </div>
                         </div>
@@ -146,15 +141,5 @@
 {% block extra_js %}
 {% if messages %}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    {% for message in messages %}
-    Swal.fire({
-        icon: '{% if message.tags == "success" %}success{% elif message.tags == "error" %}error{% else %}info{% endif %}',
-        title: "{{ message|escapejs }}",
-        showConfirmButton: false,
-        timer: 2500
-    });
-    {% endfor %}
-</script>
 {% endif %}
 {% endblock extra_js %}
